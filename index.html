@@ -15,11 +15,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --primary: #1A1712;
-    --primary-light: #3D3226;
-    --electric: #F0B429;
-    --accent: #8B5E8F;
-    --accent-dark: #6F4873;
+    --primary: #5E3F7A;
+    --primary-light: #7A549E;
+    --electric: #D1861F;
+    --accent: #D1861F;
+    --accent-dark: #A8690F;
     --bg: #FFFBF2;
     --card: #ffffff;
     --text: #201C16;
@@ -40,15 +40,18 @@
 
   /* ===== TOPBAR (logo + busca + carrinho + usuário) ===== */
   .topbar {
-    background: linear-gradient(135deg, #0F0C09 0%, #1A1712 55%, #3D3226 100%);
-    border-bottom: 3px solid var(--electric);
+    background: linear-gradient(135deg, #3B2650 0%, #5E3F7A 55%, #7A549E 100%);
     color: #fff; padding: 0.55rem 1.2rem;
     display: flex; align-items: center; gap: 1rem;
     position: fixed; top: 0; left: 0; right: 0; z-index: 300; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
   }
+  .topbar::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 6px;
+    background: repeating-linear-gradient(-45deg, var(--primary) 0 20px, var(--electric) 20px 40px);
+  }
   .topbar .brand { font-family: var(--fonte-display); font-size: 1.3rem; font-weight: 400; display: flex; align-items: center; gap: 10px; letter-spacing: .5px; cursor: pointer; white-space: nowrap; text-transform: uppercase; }
-  .brand-logo { width: 42px; height: 42px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(240,180,41,.55), 0 2px 10px rgba(0,0,0,.35); }
-  .login-logo { width: 90px; height: 90px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(240,180,41,.4), 0 6px 20px rgba(26,23,18,.25); }
+  .brand-logo { width: 42px; height: 42px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(209,134,31,.55), 0 2px 10px rgba(0,0,0,.35); }
+  .login-logo { width: 90px; height: 90px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(209,134,31,.4), 0 6px 20px rgba(94,63,122,.25); }
 
   .topbar-search { flex: 1; max-width: 620px; margin: 0 auto; position: relative; }
   .topbar-search input {
@@ -215,7 +218,7 @@
   }
 
   /* ===== BANNER ROTATIVO ===== */
-  .banner-wrap { position: relative; width: 100%; overflow: hidden; background: #1A1712; margin-bottom: 1.2rem; border-radius: 0; }
+  .banner-wrap { position: relative; width: 100%; overflow: hidden; background: #5E3F7A; margin-bottom: 1.2rem; border-radius: 0; }
   .banner-track { display: flex; transition: transform .6s cubic-bezier(.4,0,.2,1); }
   .banner-slide { min-width: 100%; }
   .banner-slide img { width: 100%; height: auto; display: block; aspect-ratio: 1600/340; object-fit: cover; }
@@ -261,7 +264,7 @@
     transition: transform .15s, background .2s;
   }
   .fav-btn:hover { transform: scale(1.12); background: #fff; }
-  .fav-btn.on { background: #F4E9F1; border-color: var(--accent); }
+  .fav-btn.on { background: #FBF0DC; border-color: var(--accent); }
 
   /* ===== MODAL DE CONTA ===== */
   .auth-tabs { display: flex; gap: 6px; margin-bottom: 1rem; }
@@ -286,7 +289,7 @@
 
   /* ===== NAVBAR ===== */
   .navbar {
-    background: linear-gradient(135deg, #0F0C09 0%, #1A1712 55%, #3D3226 100%);
+    background: linear-gradient(135deg, #3B2650 0%, #5E3F7A 55%, #7A549E 100%);
     border-bottom: 3px solid var(--electric);
     color: #fff; padding: 0.7rem 1.5rem;
     display: flex; align-items: center; justify-content: space-between;
@@ -294,8 +297,8 @@
     flex-wrap: wrap; gap: 0.7rem;
   }
   .navbar .brand { font-family: var(--fonte-display); font-size: 1.5rem; font-weight: 400; display: flex; align-items: center; gap: 12px; letter-spacing: .5px; text-transform: uppercase; }
-  .brand-logo { width: 46px; height: 46px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(240,180,41,.55), 0 2px 10px rgba(0,0,0,.35); }
-  .login-logo { width: 100px; height: 100px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(240,180,41,.4), 0 6px 20px rgba(26,23,18,.25); }
+  .brand-logo { width: 46px; height: 46px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(209,134,31,.55), 0 2px 10px rgba(0,0,0,.35); }
+  .login-logo { width: 100px; height: 100px; border-radius: 50%; box-shadow: 0 0 0 3px rgba(209,134,31,.4), 0 6px 20px rgba(94,63,122,.25); }
   .nav-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
   .nav-btn {
     background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.25);
@@ -315,7 +318,7 @@
   .section.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none;} }
 
-  .page-title { font-family: var(--fonte-display); font-size: 2rem; color: var(--primary); margin-bottom: 0.3rem; font-weight: 400; letter-spacing: .01em; text-transform: uppercase; border-left: 6px solid var(--electric); padding-left: 14px; }
+  .page-title { font-family: var(--fonte-display); font-size: 2rem; color: var(--primary); margin-bottom: 0.3rem; font-weight: 400; letter-spacing: .01em; text-transform: uppercase; border-left: 7px solid var(--electric); border-image: linear-gradient(180deg, var(--primary), var(--electric)) 1 100%; padding-left: 14px; }
   .page-sub { color: var(--text-muted); margin-bottom: 1.4rem; font-size: 0.95rem; }
 
   /* ===== NAVEGAÇÃO POR CATEGORIA (pílulas) ===== */
@@ -331,7 +334,7 @@
     background: var(--bg); color: var(--text); cursor: pointer; transition: all .18s; white-space: nowrap;
   }
   .cat-pill:hover { border-color: var(--primary); }
-  .cat-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .cat-pill.active { background: linear-gradient(100deg, var(--primary), var(--primary-light)); border-color: var(--primary); color: #fff; }
   @media (max-width: 900px) { .cat-nav { top: var(--topbar-h); } }
 
   /* ===== FILTROS ===== */
@@ -359,7 +362,7 @@
     background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
     overflow: hidden; transition: all .25s; box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative;
   }
-  .product-card:hover { box-shadow: 0 12px 28px rgba(26,23,18,.16); transform: translateY(-4px); border-color: var(--electric); }
+  .product-card:hover { box-shadow: 0 12px 28px rgba(94,63,122,.16); transform: translateY(-4px); border-color: var(--electric); }
   .product-img {
     width: 100%; aspect-ratio: 3/4; background: linear-gradient(135deg, #F6EFDC, #FBF6EA);
     display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
@@ -367,7 +370,7 @@
   .product-img img { width: 100%; height: 100%; object-fit: cover; }
   .product-img .placeholder { font-size: 2.8rem; opacity: .35; }
   .cat-tag {
-    position: absolute; top: 10px; left: 10px; background: rgba(26,23,18,0.85); color: #fff;
+    position: absolute; top: 10px; left: 10px; background: rgba(94,63,122,0.85); color: #fff;
     font-size: 0.66rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .5px; text-transform: uppercase;
   }
   .stock-tag {
@@ -526,7 +529,7 @@
   /* ===== TOAST ===== */
   #toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: linear-gradient(135deg, #1A1712, #3D3226); color: #fff; padding: 0.75rem 1.4rem; border-radius: 30px; border: 1px solid var(--electric);
+    background: linear-gradient(135deg, #5E3F7A, #7A549E); color: #fff; padding: 0.75rem 1.4rem; border-radius: 30px; border: 1px solid var(--electric);
     font-size: 0.9rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     opacity: 0; transition: all .35s; z-index: 500; pointer-events: none;
   }
@@ -981,7 +984,7 @@
             <div class="field">
               <label>Cores disponíveis</label>
               <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
-                <input type="color" id="p-cor-hex" value="#1A1712" style="width:46px;height:38px;padding:2px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
+                <input type="color" id="p-cor-hex" value="#5E3F7A" style="width:46px;height:38px;padding:2px;border:1px solid var(--border);border-radius:8px;cursor:pointer">
                 <input type="text" id="p-cor-nome" placeholder="Nome da cor (ex: Preto)" style="flex:1;min-width:140px;padding:.6rem .7rem;border:1px solid var(--border);border-radius:8px;font-size:.92rem;font-family:inherit">
                 <button type="button" class="btn-clear" onclick="adicionarCorProduto()">+ Adicionar cor</button>
               </div>
@@ -1070,14 +1073,14 @@
             <div class="field">
               <label>Cor principal</label>
               <div class="cor-row">
-                <input type="color" id="tema-cor1" value="#1A1712" oninput="previewTema()">
+                <input type="color" id="tema-cor1" value="#5E3F7A" oninput="previewTema()">
                 <input type="text" id="tema-cor1-hex" style="flex:1" oninput="document.getElementById('tema-cor1').value=this.value; previewTema()">
               </div>
             </div>
             <div class="field">
               <label>Cor de destaque</label>
               <div class="cor-row">
-                <input type="color" id="tema-cor2" value="#F0B429" oninput="previewTema()">
+                <input type="color" id="tema-cor2" value="#D1861F" oninput="previewTema()">
                 <input type="text" id="tema-cor2-hex" style="flex:1" oninput="document.getElementById('tema-cor2').value=this.value; previewTema()">
               </div>
             </div>
@@ -1915,7 +1918,7 @@ function htmlCarregandoPagamento() {
   <title>Abrindo o pagamento...</title><style>
     *{box-sizing:border-box;margin:0}
     body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-      background:linear-gradient(160deg,#0F0C09,#1A1712 55%,#3D3226);
+      background:linear-gradient(160deg,#3B2650,#5E3F7A 55%,#7A549E);
       color:#fff;min-height:100vh;display:flex;flex-direction:column;
       align-items:center;justify-content:center;padding:1.5rem;text-align:center}
     .ampulheta{font-size:4.6rem;line-height:1;animation:girar 2s ease-in-out infinite;margin-bottom:1.2rem}
@@ -1923,7 +1926,7 @@ function htmlCarregandoPagamento() {
     h1{font-size:1.5rem;font-weight:800;margin-bottom:.6rem}
     p{font-size:1.05rem;opacity:.92;line-height:1.5;max-width:420px}
     .barra{margin-top:1.6rem;width:230px;height:7px;border-radius:6px;background:rgba(255,255,255,.22);overflow:hidden}
-    .barra i{display:block;height:100%;width:40%;border-radius:6px;background:#F0B429;animation:desliza 1.3s ease-in-out infinite}
+    .barra i{display:block;height:100%;width:40%;border-radius:6px;background:#D1861F;animation:desliza 1.3s ease-in-out infinite}
     @keyframes desliza{0%{margin-left:-40%}100%{margin-left:100%}}
     small{margin-top:1.4rem;font-size:.9rem;opacity:.75;max-width:380px}
   </style></head><body>
@@ -2425,7 +2428,7 @@ function processarImagem(file, largura, altura, qualidade) {
 let tema = {};
 let logoTemaNova = null;
 
-const TEMA_PADRAO = { logo: '', cor1: '#1A1712', cor2: '#F0B429', fonte: "'Segoe UI', system-ui, -apple-system, sans-serif" };
+const TEMA_PADRAO = { logo: '', cor1: '#5E3F7A', cor2: '#D1861F', fonte: "'Segoe UI', system-ui, -apple-system, sans-serif" };
 
 function aplicarTema(t) {
   const raiz = document.documentElement.style;
@@ -3208,7 +3211,7 @@ function marcarEnviado(id) {
 
 /* ==================== EXPORTAR PDF — PEDIDO DETALHADO ==================== */
 function cabecalhoPDF(doc, subtitulo) {
-  doc.setFillColor(26, 23, 18);
+  doc.setFillColor(94, 63, 122);
   doc.rect(0, 0, 210, 30, 'F');
   if (typeof LOGO_B64 !== 'undefined') {
     try { doc.addImage(LOGO_B64, 'PNG', 14, 6, 18, 18); } catch (e) {}
@@ -3269,14 +3272,14 @@ async function exportarPedidoPDF(id) {
     startY: y,
     head: [['', 'Produto', 'Variação', 'Qtd', 'Preço un.', 'Subtotal']],
     body: itens.map(i => ['', i.nome, [i.cor, i.tamanho].filter(Boolean).join(' / ') || '-', i.qtd, fmt(i.preco), fmt(i.preco * i.qtd)]),
-    headStyles: { fillColor: [26, 23, 18], fontSize: 9.5 },
+    headStyles: { fillColor: [94, 63, 122], fontSize: 9.5 },
     bodyStyles: { fontSize: 9.5, minCellHeight: linhaAltura, valign: 'middle' },
     columnStyles: {
       0: { cellWidth: imgSize + 6 },
       3: { halign: 'center' }, 4: { halign: 'right' }, 5: { halign: 'right' }
     },
     foot: [['', '', '', '', 'TOTAL', fmt(p.total || 0)]],
-    footStyles: { fillColor: [240, 244, 248], textColor: [26, 23, 18], fontStyle: 'bold', fontSize: 10.5, halign: 'right' },
+    footStyles: { fillColor: [240, 244, 248], textColor: [94, 63, 122], fontStyle: 'bold', fontSize: 10.5, halign: 'right' },
     didDrawCell: (data) => {
       if (data.section === 'body' && data.column.index === 0) {
         const item = itens[data.row.index];
@@ -3344,7 +3347,7 @@ function exportarRelatorioPDF() {
     startY: 57,
     head: [['', 'Pedido', 'Data', 'Cliente', 'Produto', 'Qtd', 'Preço un.', 'Subtotal', 'Status']],
     body: linhas.map(l => ['', l.codigo, l.data, l.cliente, l.nome, l.qtd, fmt(l.preco), fmt(l.subtotal), l.status]),
-    headStyles: { fillColor: [26, 23, 18], fontSize: 7.8 },
+    headStyles: { fillColor: [94, 63, 122], fontSize: 7.8 },
     bodyStyles: { fontSize: 7.6, minCellHeight: imgSize + 4, valign: 'middle' },
     columnStyles: {
       0: { cellWidth: imgSize + 4 },
@@ -3352,7 +3355,7 @@ function exportarRelatorioPDF() {
       6: { halign: 'right' }, 7: { halign: 'right' }
     },
     foot: [['', '', '', '', '', '', '', 'TOTAL GERAL', fmt(totalGeral)]],
-    footStyles: { fillColor: [240, 244, 248], textColor: [26, 23, 18], fontStyle: 'bold', fontSize: 8.5, halign: 'right' },
+    footStyles: { fillColor: [240, 244, 248], textColor: [94, 63, 122], fontStyle: 'bold', fontSize: 8.5, halign: 'right' },
     didDrawCell: (data) => {
       if (data.section === 'body' && data.column.index === 0) {
         const linha = linhas[data.row.index];
