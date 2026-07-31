@@ -1,0 +1,5 @@
+.env
+node_modules/
+*.json.key
+serviceAccount*.json
+npm-debug.log*
