@@ -108,7 +108,8 @@
   }
   .side-btn:hover { background: #FBF3DE; color: var(--primary); }
   .side-btn.active { background: var(--primary); color: #fff; }
-  .side-btn .s-ico { font-size: 1.1rem; width: 22px; text-align: center; }
+  .side-btn .s-ico { font-size: .95rem; width: 20px; text-align: center; filter: grayscale(1) contrast(1.1); opacity: .8; }
+  .side-btn.active .s-ico { filter: grayscale(1) brightness(3); opacity: .95; }
   .side-badge { margin-left: auto; background: var(--danger); color: #fff; border-radius: 20px; font-size: .68rem; font-weight: 800; padding: 1px 7px; }
   .main-area { flex: 1; min-width: 0; margin-left: 232px; }
 
@@ -139,7 +140,8 @@
       color: var(--text-muted); position: relative;
     }
     .bottom-nav button.active { color: var(--primary); }
-    .bottom-nav .bn-ico { font-size: 1.22rem; }
+    .bottom-nav .bn-ico { font-size: 1.1rem; filter: grayscale(1); opacity: .75; }
+    .bottom-nav button.active .bn-ico { opacity: 1; }
     .bottom-nav .side-badge { position: absolute; top: 2px; right: 22%; margin: 0; }
     body { padding-bottom: 62px; }
   }
@@ -1212,9 +1214,9 @@
         <h2 id="m-nome"></h2>
         <div id="m-precos"></div>
         <p id="m-atacado-info" style="font-size:.85rem; margin:8px 0 12px; min-height:1.2em; font-weight:600;"></p>
-        <p id="m-desc" style="color:var(--text-muted); line-height:1.65; font-size:.95rem; white-space:pre-line;"></p>
         <div id="m-cores"></div>
         <div id="m-tamanhos"></div>
+        <p id="m-desc" style="color:var(--text-muted); line-height:1.65; font-size:.95rem; white-space:pre-line;"></p>
         <p id="m-estoque" style="font-size:.85rem; color:var(--text-muted); margin-top:10px; font-weight:600;"></p>
         <button class="btn-clear" id="m-fav" onclick="alternarFavoritoModal()" style="margin-top:12px; width:100%;">🤍 Salvar nos favoritos</button>
         <div class="qty-row" style="margin-top:18px;">
@@ -1362,6 +1364,10 @@ function toast(msg) {
 }
 
 const fmt = v => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
+// Gera um literal JS de string (aspas simples) seguro para embutir dentro de um
+// atributo onclick="" (que usa aspas duplas). Usar JSON.stringify aqui quebraria
+// o atributo, porque ele devolve aspas duplas.
+const attrStr = s => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 const getImagens = p => (p.imagens && p.imagens.length ? p.imagens : (p.imagem ? [p.imagem] : []));
 const getCapa = p => { const imgs = getImagens(p); const i = p.capa || 0; return imgs[i] || imgs[0] || ''; };
 
@@ -1500,14 +1506,14 @@ function corSwatchesHTML(p, ctx) {
   if (!Array.isArray(p.cores) || !p.cores.length) return '';
   const sel = (varTemp[p.id] && varTemp[p.id].cor) || '';
   return `<div class="variant-row"><div class="variant-label">Cor${sel ? ': ' + sel : ''}</div><div class="swatch-row">` +
-    p.cores.map(c => `<span class="swatch${sel === c.nome ? ' sel' : ''}" style="background:${c.hex}" title="${c.nome}" onclick="event.stopPropagation(); selecionarVariante('${p.id}','cor',${JSON.stringify(c.nome)})"></span>`).join('') +
+    p.cores.map(c => `<span class="swatch${sel === c.nome ? ' sel' : ''}" style="background:${c.hex}" title="${c.nome}" onclick="event.stopPropagation(); selecionarVariante('${p.id}','cor',${attrStr(c.nome)})"></span>`).join('') +
     `</div></div>`;
 }
 function tamanhoChipsHTML(p) {
   if (!Array.isArray(p.tamanhos) || !p.tamanhos.length) return '';
   const sel = (varTemp[p.id] && varTemp[p.id].tamanho) || '';
   return `<div class="variant-row"><div class="variant-label">Tamanho</div><div class="chip-row">` +
-    p.tamanhos.map(t => `<span class="size-chip${sel === t ? ' sel' : ''}" onclick="event.stopPropagation(); selecionarVariante('${p.id}','tamanho',${JSON.stringify(t)})">${t}</span>`).join('') +
+    p.tamanhos.map(t => `<span class="size-chip${sel === t ? ' sel' : ''}" onclick="event.stopPropagation(); selecionarVariante('${p.id}','tamanho',${attrStr(t)})">${t}</span>`).join('') +
     `</div></div>`;
 }
 // Alterna a seleção de cor/tamanho de um produto e re-renderiza a área visível
@@ -1626,12 +1632,12 @@ function renderVariantesModal() {
   const tamanhos = document.getElementById('m-tamanhos');
   if (Array.isArray(modalProd.cores) && modalProd.cores.length) {
     cores.innerHTML = `<div class="variant-row"><div class="variant-label">Cor${modalVar.cor ? ': ' + modalVar.cor : ''}</div><div class="swatch-row">` +
-      modalProd.cores.map(c => `<span class="swatch${modalVar.cor === c.nome ? ' sel' : ''}" style="background:${c.hex}" title="${c.nome}" onclick="selecionarVarianteModal('cor', ${JSON.stringify(c.nome)})"></span>`).join('') +
+      modalProd.cores.map(c => `<span class="swatch${modalVar.cor === c.nome ? ' sel' : ''}" style="background:${c.hex}" title="${c.nome}" onclick="selecionarVarianteModal('cor', ${attrStr(c.nome)})"></span>`).join('') +
       `</div></div>`;
   } else cores.innerHTML = '';
   if (Array.isArray(modalProd.tamanhos) && modalProd.tamanhos.length) {
     tamanhos.innerHTML = `<div class="variant-row"><div class="variant-label">Tamanho</div><div class="chip-row">` +
-      modalProd.tamanhos.map(t => `<span class="size-chip${modalVar.tamanho === t ? ' sel' : ''}" onclick="selecionarVarianteModal('tamanho', ${JSON.stringify(t)})">${t}</span>`).join('') +
+      modalProd.tamanhos.map(t => `<span class="size-chip${modalVar.tamanho === t ? ' sel' : ''}" onclick="selecionarVarianteModal('tamanho', ${attrStr(t)})">${t}</span>`).join('') +
       `</div></div>`;
   } else tamanhos.innerHTML = '';
   atualizarBotaoModal();
