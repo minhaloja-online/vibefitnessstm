@@ -1003,7 +1003,7 @@
               <p style="font-size:.74rem;color:var(--text-muted);margin-top:6px">Toque nos tamanhos para marcar os que essa peça tem. Deixe todos desmarcados se não trabalhar com tamanho.</p>
             </div>
             <div class="field">
-              <label>Fotos do produto (até 5)</label>
+              <label>Fotos do produto (até 10)</label>
               <div class="img-drop" onclick="document.getElementById('p-img').click()">
                 <span>📷 Clique para adicionar fotos da galeria</span>
               </div>
@@ -1021,10 +1021,24 @@
 
         <div class="panel">
           <h3>📦 Produtos Cadastrados <span id="prod-count" style="font-size:0.8rem;color:var(--text-muted)"></span></h3>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1rem;">
+            <div class="field" style="margin-bottom:0; flex:1; min-width:200px;">
+              <label>🔍 Buscar por nome ou categoria</label>
+              <input type="text" id="adm-prod-busca" placeholder="Digite para filtrar..." oninput="renderAdminTable()">
+            </div>
+            <div class="field" style="margin-bottom:0; min-width:170px;">
+              <label>Disponibilidade</label>
+              <select id="adm-prod-status" onchange="renderAdminTable()">
+                <option value="">Todos</option>
+                <option value="ativo">✅ Disponíveis</option>
+                <option value="inativo">⛔ Indisponíveis</option>
+              </select>
+            </div>
+          </div>
           <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
             <table class="admin-table">
               <thead>
-                <tr><th></th><th>Produto</th><th>Categoria</th><th>Varejo</th><th>Atacado (3+)</th><th>Estoque</th><th>Ações</th></tr>
+                <tr><th></th><th>Produto</th><th>Categoria</th><th>Varejo</th><th>Atacado (3+)</th><th>Estoque</th><th>Disponível</th><th>Ações</th></tr>
               </thead>
               <tbody id="admin-tbody"></tbody>
             </table>
@@ -1480,6 +1494,7 @@ function renderCatalog() {
   const ordem = document.getElementById('f-ordem').value;
 
   let lista = produtos.filter(p =>
+    p.ativo !== false &&
     (!busca || p.nome.toLowerCase().includes(busca) || (p.descricao||'').toLowerCase().includes(busca)) &&
     (!cat || p.categoria === cat) &&
     p.preco >= min && p.preco <= max
@@ -2853,7 +2868,7 @@ function renderFavoritos() {
   }
   login.style.display = 'none';
 
-  const lista = produtos.filter(p => favoritos.includes(p.id));
+  const lista = produtos.filter(p => favoritos.includes(p.id) && p.ativo !== false);
   vazio.style.display = lista.length ? 'none' : 'block';
   grid.innerHTML = lista.map(p => cardProduto(p)).join('');
 }
@@ -3537,8 +3552,8 @@ function renderTamanhosAdmin() {
 
 function adicionarImagens(input) {
   const files = Array.from(input.files || []);
-  const espaco = 5 - imagensProd.length;
-  if (files.length > espaco) toast('⚠️ Máximo de 5 fotos por produto');
+  const espaco = 10 - imagensProd.length;
+  if (files.length > espaco) toast('⚠️ Máximo de 10 fotos por produto');
   files.slice(0, espaco).forEach(file => {
     const img = new Image();
     const reader = new FileReader();
@@ -3615,7 +3630,7 @@ function salvarProduto() {
 
   const op = id
     ? db.collection('produtos').doc(id).update(dados)
-    : db.collection('produtos').add({ ...dados, criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
+    : db.collection('produtos').add({ ...dados, ativo: true, criadoEm: firebase.firestore.FieldValue.serverTimestamp() });
 
   op.then(() => {
     msg.className = 'msg ok'; msg.textContent = id ? 'Produto atualizado!' : 'Produto cadastrado!';
@@ -3897,6 +3912,7 @@ async function confirmarImportacao() {
           estoque: l.estoque,
           categoria: l.categoria,
           imagens: img ? [img] : [], capa: 0, imagem: img,
+          ativo: true,
           criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
           atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
         });
@@ -3932,9 +3948,20 @@ function cancelarImportacao() {
 
 function renderAdminTable() {
   const tbody = document.getElementById('admin-tbody');
-  document.getElementById('prod-count').textContent = '(' + produtos.length + ')';
+  const busca = (document.getElementById('adm-prod-busca')?.value || '').toLowerCase().trim();
+  const statusF = document.getElementById('adm-prod-status')?.value || '';
+
+  let lista = [...produtos];
+  if (busca) lista = lista.filter(p =>
+    p.nome.toLowerCase().includes(busca) || (p.categoria || '').toLowerCase().includes(busca));
+  if (statusF === 'ativo') lista = lista.filter(p => p.ativo !== false);
+  if (statusF === 'inativo') lista = lista.filter(p => p.ativo === false);
+
+  document.getElementById('prod-count').textContent = '(' + lista.length + ' de ' + produtos.length + ')';
   document.getElementById('admin-empty').style.display = produtos.length ? 'none' : 'block';
-  tbody.innerHTML = [...produtos].sort((a,b) => a.nome.localeCompare(b.nome)).map(p => `
+  tbody.innerHTML = lista.sort((a,b) => a.nome.localeCompare(b.nome)).map(p => {
+    const ativo = p.ativo !== false;
+    return `
     <tr>
       <td>${getCapa(p) ? `<img src="${getCapa(p)}">` : '📦'}</td>
       <td><strong>${p.nome}</strong></td>
@@ -3942,11 +3969,26 @@ function renderAdminTable() {
       <td>${fmt(p.preco)}</td>
       <td>${(p.precoAtacado !== undefined && p.precoAtacado !== null) ? fmt(p.precoAtacado) : '<span style="color:var(--text-muted)">—</span>'}</td>
       <td>${p.estoque ?? '-'}</td>
+      <td>
+        <button class="mini-btn" style="background:${ativo ? '#e8f7ee' : '#f1eae0'}; color:${ativo ? '#1d7a46' : '#8A7F6D'}" onclick="alternarAtivoProduto('${p.id}', ${ativo})" title="${ativo ? 'Clique para desativar a venda' : 'Clique para liberar a venda'}">${ativo ? '✅ Disponível' : '⛔ Indisponível'}</button>
+      </td>
       <td style="white-space:nowrap">
         <button class="mini-btn mini-edit" onclick="editarProduto('${p.id}')">Editar</button>
         <button class="mini-btn mini-del" onclick="excluirProduto('${p.id}')">Excluir</button>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
+}
+
+// Ativa/desativa a venda de um produto sem alterar o resto do cadastro.
+// Produto indisponível some do catálogo e dos favoritos dos clientes, mas continua no painel do vendedor.
+async function alternarAtivoProduto(id, ativoAtual) {
+  try {
+    await db.collection('produtos').doc(id).update({ ativo: !ativoAtual });
+    toast(ativoAtual ? '⛔ Produto marcado como indisponível' : '✅ Produto disponível para venda');
+  } catch (e) {
+    toast('❌ Erro ao atualizar: ' + e.message);
+  }
 }
 
 /* ==================== CONFIG DA LOJA ==================== */
