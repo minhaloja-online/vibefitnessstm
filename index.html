@@ -2135,28 +2135,20 @@ async function enviarPedido(btn) {
     return toast('❌ Erro ao registrar o pedido. Tente novamente.');
   }
 
-  // Emojis escritos como códigos Unicode: assim chegam corretos no WhatsApp
-  // mesmo que o arquivo seja salvo/editado em outra codificação.
-  const E = {
-    carrinho: '\u{1F6D2}', nota: '\u{1F9FE}', data: '\u{1F4C5}', pessoa: '\u{1F464}',
-    fone: '\u{1F4DE}', local: '\u{1F4CD}', casa: '\u{1F3E0}', item: '\u{2022}',
-    dinheiro: '\u{1F4B0}', nota2: '\u{1F4DD}'
-  };
-
-  let msg = `${E.carrinho} *Novo Pedido \u2014 ${config.nome || 'Vibe Fitness STM'}*\n`;
-  msg += `${E.nota} Código: *${codigo}*\n`;
-  msg += `${E.data} Data: ${agora.toLocaleString('pt-BR')}\n`;
-  msg += `${E.pessoa} Cliente: ${nome}\n`;
-  if (fone) msg += `${E.fone} Telefone: ${fone}\n`;
-  if (cepDados) msg += `${E.local} Entrega: ${cepDados.localidade}-${cepDados.uf} (CEP ${document.getElementById('c-cep').value})\n`;
-  msg += `${E.casa} Endereço: ${endereco}\n`;
+  let msg = `*Novo Pedido \u2014 ${config.nome || 'Vibe Fitness STM'}*\n`;
+  msg += `Código: *${codigo}*\n`;
+  msg += `Data: ${agora.toLocaleString('pt-BR')}\n`;
+  msg += `Cliente: ${nome}\n`;
+  if (fone) msg += `Telefone: ${fone}\n`;
+  if (cepDados) msg += `Entrega: ${cepDados.localidade}-${cepDados.uf} (CEP ${document.getElementById('c-cep').value})\n`;
+  msg += `Endereço: ${endereco}\n`;
   msg += `\n*Itens:*\n`;
   carrinho.forEach(i => {
     const variacao = [i.cor, i.tamanho].filter(Boolean).join(' / ');
-    msg += `${E.item} ${i.nome}${variacao ? ' (' + variacao + ')' : ''} x${i.qtd} \u2014 ${fmt(precoItemCarrinho(i) * i.qtd)}\n`;
+    msg += `\u2022 ${i.nome}${variacao ? ' (' + variacao + ')' : ''} x${i.qtd} \u2014 ${fmt(precoItemCarrinho(i) * i.qtd)}\n`;
   });
-  msg += `\n${E.dinheiro} *Total: ${fmt(total)}*`;
-  if (obs) msg += `\n\n${E.nota2} Obs: ${obs}`;
+  msg += `\n*Total: ${fmt(total)}*`;
+  if (obs) msg += `\n\nObs: ${obs}`;
 
   const foneLoja = (config.whats || '').replace(/\D/g, '');
   const url = foneLoja
