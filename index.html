@@ -327,6 +327,7 @@
   .cat-nav {
     display: flex; gap: .5rem; overflow-x: auto; padding: .8rem 1.2rem; background: var(--card);
     border-bottom: 1px solid var(--border); position: sticky; top: var(--topbar-h); z-index: 150;
+    margin-left: 232px; /* não passa por baixo da barra lateral fixa */
     -ms-overflow-style: none; scrollbar-width: none;
   }
   .cat-nav::-webkit-scrollbar { display: none; }
@@ -337,7 +338,7 @@
   }
   .cat-pill:hover { border-color: var(--primary); }
   .cat-pill.active { background: linear-gradient(100deg, var(--primary), var(--primary-light)); border-color: var(--primary); color: #fff; }
-  @media (max-width: 900px) { .cat-nav { top: var(--topbar-h); } }
+  @media (max-width: 900px) { .cat-nav { top: var(--topbar-h); margin-left: 0; } }
 
   /* ===== FILTROS ===== */
   .filters {
