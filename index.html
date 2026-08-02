@@ -68,7 +68,8 @@
     font-family: inherit; transition: background .2s; position: relative;
   }
   .tb-btn:hover { background: rgba(255,255,255,.24); }
-  .tb-ico { font-size: 1.15rem; line-height: 1; }
+  .tb-ico { font-size: 1.15rem; line-height: 1; display:inline-flex; align-items:center; justify-content:center; }
+  .tb-ico svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
   .tb-txt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
   .tb-txt small { font-size: .68rem; opacity: .8; font-weight: 500; }
   .tb-txt strong { font-size: .82rem; font-weight: 700; }
@@ -131,6 +132,7 @@
     .tb-txt strong { font-size: .72rem; }
     .tb-btn { padding: .38rem .5rem; gap: .35rem; }
     .tb-ico { font-size: 1rem; }
+    .tb-ico svg { width:19px; height:19px; }
     .avatar, .avatar-ph { width: 26px; height: 26px; font-size: .82rem; }
     .topbar-actions { gap: .35rem; }
     .bottom-nav {
@@ -461,6 +463,9 @@
   .cart-item-info .unit { font-size: 0.8rem; color: var(--text-muted); }
   .cart-item-total { font-weight: 800; color: var(--primary); font-size: 1rem; white-space: nowrap; }
   .btn-remove { background: none; border: none; color: var(--danger); font-size: 1.15rem; cursor: pointer; padding: 6px; }
+  .btn-editar-item { background:var(--bg); border:1px solid var(--border); border-radius:8px; cursor:pointer;
+                     font-family:inherit; font-size:.76rem; font-weight:700; color:var(--primary); padding:.42rem .7rem; transition:all .18s; }
+  .btn-editar-item:hover { border-color:var(--primary); background:#F6ECD6; }
   .cart-summary {
     background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 1.3rem; box-shadow: var(--shadow); position: sticky; top: 85px;
@@ -718,7 +723,7 @@
     </div>
 
     <button class="tb-btn" onclick="switchTab('carrinho')" title="Meu carrinho">
-      <span class="tb-ico">🛒</span>
+      <span class="tb-ico"><svg viewBox="0 0 24 24"><path d="M5.2 7.2h13.6l1.1 12a1.2 1.2 0 0 1-1.2 1.3H5.3a1.2 1.2 0 0 1-1.2-1.3l1.1-12Z"/><path d="M8.7 10.2V6.6a3.3 3.3 0 0 1 6.6 0v3.6"/></svg></span>
       <span class="tb-txt">
         <small id="cart-qtd-txt">Meu Carrinho</small>
         <strong id="cart-total-txt">R$ 0,00</strong>
@@ -1023,18 +1028,26 @@
       <div id="aview-produtos" style="display:none">
       <div class="panel" style="margin-bottom:1.2rem;">
         <h3>📥 Importar Produtos em Massa</h3>
-        <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:1rem;">
-          Envie uma planilha (.xlsx ou .csv) com os produtos. Colunas aceitas: <code>nome</code>, <code>descricao</code>, <code>preco</code>, <code>precoAtacado</code>, <code>estoque</code>, <code>categoria</code>.
+        <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:.8rem;">
+          Envie uma planilha (.xlsx ou .csv) com os produtos. Colunas aceitas: <code>nome</code>, <code>descricao</code>, <code>preco</code>, <code>precoAtacado</code>, <code>custo</code>, <code>estoque</code>, <code>categoria</code>.
         </p>
+        <button class="btn-clear" style="width:100%; margin-bottom:1rem;" onclick="baixarModeloImportacao()">⬇️ Baixar planilha modelo</button>
         <div class="img-drop" onclick="document.getElementById('import-file').click()">
-          <span>📄 Clique para selecionar a planilha (.xlsx ou .csv)</span>
+          <span id="import-file-label">📄 Clique para selecionar a planilha (.xlsx ou .csv)</span>
         </div>
         <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="lerPlanilhaImportacao(this)">
 
         <div id="import-fotos-box" style="display:none; margin-top:1.1rem;">
           <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:.7rem;">
-            <strong>Passo 2 (opcional):</strong> selecione a pasta com as fotos. Cada foto é ligada ao produto pelo <strong>nome do arquivo</strong> comparado à coluna <code>descricao</code>. Pode escolher a pasta principal que ele varre as subpastas.
+            <strong>Passo 2 (opcional):</strong> selecione a pasta com as fotos. Crie <strong>uma subpasta por produto</strong>, com o nome da subpasta igual ao <code>nome</code> do produto na planilha — todas as fotos de dentro dela viram as fotos daquele produto (até 10, em ordem alfabética; a primeira vira a capa).
           </p>
+          <div style="font-size:.78rem; color:var(--text-muted); background:var(--bg); border:1px dashed var(--border); border-radius:8px; padding:.7rem .9rem; margin-bottom:.8rem; line-height:1.7;">
+            📁 <strong>fotos</strong><br>
+            &nbsp;&nbsp;📁 Conjunto Legging Preto<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;🖼️ 1.jpg &nbsp; 🖼️ 2.jpg &nbsp; 🖼️ 3.jpg<br>
+            &nbsp;&nbsp;📁 Short Saia Branco<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;🖼️ frente.jpg &nbsp; 🖼️ costas.jpg
+          </div>
           <div class="img-drop" onclick="document.getElementById('import-fotos').click()">
             <span id="import-fotos-label">🖼️ Clique para selecionar a pasta de imagens</span>
           </div>
@@ -1733,33 +1746,42 @@ function fotosCard(p) {
 const fotoIdx = {};       // índice da foto visível, por produto
 let ultimoArraste = 0;    // marca o fim de um deslize, para o clique não abrir o produto sem querer
 
-// Move o carrossel sem redesenhar o card (redesenhar cortaria a animação)
+// Move o carrossel sem redesenhar o card (redesenhar cortaria a animação).
+// O mesmo produto pode estar na tela duas vezes (catálogo e favoritos), então
+// atualiza TODAS as faixas daquele produto — usar getElementById pegaria só a
+// primeira, que costuma ser a da aba escondida.
 function mostrarFoto(pid, i, total) {
   if (!total || total <= 1) return;
   fotoIdx[pid] = ((i % total) + total) % total;
-  const track = document.getElementById('track-' + pid);
-  if (track) track.style.transform = `translateX(-${fotoIdx[pid] * 100}%)`;
+  document.querySelectorAll(`.card-track[data-pid="${pid}"]`).forEach(t => {
+    t.style.transform = `translateX(-${fotoIdx[pid] * 100}%)`;
+  });
   const dots = document.querySelectorAll(`[data-dots="${pid}"] .card-dot`);
-  dots.forEach((d, k) => d.classList.toggle('on', k === fotoIdx[pid]));
+  dots.forEach((d, k) => d.classList.toggle('on', k % total === fotoIdx[pid]));
 }
 
 function passarFoto(pid, passo) {
-  const track = document.getElementById('track-' + pid);
+  const track = document.querySelector(`.card-track[data-pid="${pid}"]`);
   if (!track) return;
   const total = Number(track.dataset.total) || 1;
   mostrarFoto(pid, (fotoIdx[pid] || 0) + passo, total);
-  track.dataset.mexido = Date.now(); // adia o avanço automático depois de uma ação manual
+  // adia o avanço automático depois de uma ação manual, em todas as cópias do card
+  document.querySelectorAll(`.card-track[data-pid="${pid}"]`).forEach(t => t.dataset.mexido = Date.now());
 }
 
 // Avanço automático: um único relógio cuida de todos os cards visíveis.
 setInterval(() => {
   if (document.hidden) return;
+  const jaFeitos = new Set(); // o mesmo produto não pode avançar duas vezes por rodada
   document.querySelectorAll('.card-track').forEach(track => {
+    if (track.offsetParent === null) return;                           // aba escondida
     const total = Number(track.dataset.total) || 1;
     if (total <= 1) return;
-    if (track.dataset.pausado === '1') return;                        // mouse em cima
+    if (track.dataset.pausado === '1') return;                         // mouse em cima
     if (Date.now() - Number(track.dataset.mexido || 0) < 5000) return; // acabou de mexer na mão
     const pid = track.dataset.pid;
+    if (jaFeitos.has(pid)) return;
+    jaFeitos.add(pid);
     mostrarFoto(pid, (fotoIdx[pid] || 0) + 1, total);
   });
 }, 5000);
@@ -1839,7 +1861,7 @@ function cardProduto(p) {
     <div class="product-card">
       <div class="product-img" data-pid="${p.id}" style="cursor:pointer" onclick="abrirProduto('${p.id}')" title="Ver detalhes">
         ${fotos.length ? `
-          <div class="card-track" id="track-${p.id}" data-pid="${p.id}" data-total="${fotos.length}" style="transform:translateX(-${idxFoto * 100}%)">
+          <div class="card-track" data-pid="${p.id}" data-total="${fotos.length}" style="transform:translateX(-${idxFoto * 100}%)">
             ${fotos.map(src => `<img src="${src}" alt="${p.nome}" draggable="false">`).join('')}
           </div>
           ${fotos.length > 1 ? `
@@ -1928,6 +1950,7 @@ function precoItemCarrinho(item) {
 
 /* ==================== MODAL DE PRODUTO ==================== */
 let modalProd = null, modalQtd = 1, modalImgs = [], modalVar = { cor: '', tamanho: '', numeracao: '' };
+let modalEditIdx = null; // índice no carrinho quando o modal foi aberto para editar um item
 
 function abrirProduto(id) {
   // Um deslize no carrossel termina em "clique" para o navegador. Se a pessoa
@@ -1936,6 +1959,7 @@ function abrirProduto(id) {
   modalProd = produtos.find(p => p.id === id);
   if (!modalProd) return;
   modalQtd = 1;
+  modalEditIdx = null;
   modalVar = { cor: '', tamanho: '', numeracao: '' };
   document.getElementById('m-nome').textContent = modalProd.nome;
   const catEl = document.getElementById('m-cat');
@@ -2016,8 +2040,11 @@ function atualizarBotaoModal() {
   const falta = (precisaCor && !modalVar.cor) || (precisaTam && !modalVar.tamanho) || (precisaNum && !modalVar.numeracao);
   const esgotadoTudo = estoqueCombo(modalProd, {}) <= 0;
   const btn = document.getElementById('m-add');
-  btn.disabled = falta || esgotadoTudo;
-  btn.textContent = esgotadoTudo ? 'Esgotado' : (falta ? 'Escolha as opções' : '+ Adicionar ao carrinho');
+  const editando = modalEditIdx !== null;
+  btn.disabled = falta || (esgotadoTudo && !editando);
+  btn.textContent = editando
+    ? (falta ? 'Escolha as opções' : '✔ Atualizar item do carrinho')
+    : (esgotadoTudo ? 'Esgotado' : (falta ? 'Escolha as opções' : '+ Adicionar ao carrinho'));
 }
 
 function atualizarPrecoModal() {
@@ -2054,8 +2081,66 @@ function mQtd(d) {
   atualizarPrecoModal();
 }
 
+// O produto tem alguma opção que valha a pena reabrir para trocar?
+function temVariacao(id) {
+  const p = produtos.find(x => x.id === id);
+  if (!p) return false;
+  return (Array.isArray(p.cores) && p.cores.length > 0) || temTamanho(p) || temNumeracao(p);
+}
+
+// Abre o modal do produto já marcado com as opções que estão no carrinho.
+// Ao confirmar, a linha existente é ATUALIZADA em vez de virar uma linha nova.
+function editarItemCarrinho(idx) {
+  const item = carrinho[idx];
+  if (!item) return;
+  const p = produtos.find(x => x.id === item.id);
+  if (!p) return toast('⚠️ Esse produto não está mais no catálogo.');
+  ultimoArraste = 0;              // veio de um clique de verdade
+  abrirProduto(item.id);
+  if (!modalProd) return;
+  modalEditIdx = idx;
+  modalQtd = item.qtd;
+  modalVar = { cor: item.cor || '', tamanho: item.tamanho || '', numeracao: item.numeracao || '' };
+  renderVariantesModal();
+  atualizarPrecoModal();
+}
+
+function salvarEdicaoCarrinho() {
+  const idx = modalEditIdx;
+  const item = carrinho[idx];
+  if (!item || !modalProd) return fecharModal();
+
+  const precisaCor = Array.isArray(modalProd.cores) && modalProd.cores.length > 0;
+  if (precisaCor && !modalVar.cor) return toast('⚠️ Escolha a cor.');
+  if (temTamanho(modalProd) && !modalVar.tamanho) return toast('⚠️ Escolha o tamanho.');
+  if (temNumeracao(modalProd) && !modalVar.numeracao) return toast('⚠️ Escolha a numeração.');
+
+  const cor = modalVar.cor || '', tam = modalVar.tamanho || '', num = modalVar.numeracao || '';
+  const disponivel = estoqueCombo(modalProd, { cor, tamanho: tam, numeracao: num });
+  // o que já está em outras linhas da mesma combinação (esta linha não conta)
+  const emOutras = carrinho.reduce((s, it, k) => (k !== idx && it.id === item.id &&
+    (it.cor || '') === cor && (it.tamanho || '') === tam && (it.numeracao || '') === num) ? s + it.qtd : s, 0);
+  if (modalQtd + emOutras > disponivel) {
+    return toast(disponivel > 0 ? `⚠️ Só temos ${disponivel} em estoque dessa opção.` : '⚠️ Essa opção está esgotada.');
+  }
+
+  // se a nova combinação já existe em outra linha, junta as duas
+  const gemea = carrinho.findIndex((it, k) => k !== idx && it.id === item.id &&
+    (it.cor || '') === cor && (it.tamanho || '') === tam && (it.numeracao || '') === num);
+  if (gemea >= 0) {
+    carrinho[gemea].qtd += modalQtd;
+    carrinho.splice(idx, 1);
+  } else {
+    Object.assign(item, { cor, tamanho: tam, numeracao: num, qtd: modalQtd });
+  }
+  salvarCarrinho();
+  fecharModal();
+  toast('✅ Item atualizado!');
+}
+
 function addDoModal() {
   if (!modalProd) return;
+  if (modalEditIdx !== null) return salvarEdicaoCarrinho();
   const precisaCor = Array.isArray(modalProd.cores) && modalProd.cores.length > 0;
   const precisaTam = Array.isArray(modalProd.tamanhos) && modalProd.tamanhos.length > 0;
   const precisaNum = temNumeracao(modalProd);
@@ -2069,6 +2154,7 @@ function addDoModal() {
 function fecharModal() {
   document.getElementById('modal-produto').classList.remove('open');
   document.body.style.overflow = '';
+  modalEditIdx = null;
 }
 
 function salvarCarrinho() {
@@ -2102,18 +2188,22 @@ function renderCarrinho() {
     const noAtacado = i.precoAtacado != null && i.qtd >= QTD_ATACADO;
     const faltaAtacado = i.precoAtacado != null && !noAtacado ? QTD_ATACADO - i.qtd : 0;
     const variacao = [i.cor, i.tamanho, i.numeracao].filter(Boolean).join(' · ');
+    const editavel = temVariacao(i.id);
     return `
     <div class="cart-item">
-      <div class="cart-item-img">${i.imagem ? `<img src="${i.imagem}">` : '📦'}</div>
+      <div class="cart-item-img" ${editavel ? `style="cursor:pointer" onclick="editarItemCarrinho(${idx})" title="Trocar cor/tamanho"` : ''}>${i.imagem ? `<img src="${i.imagem}">` : '📦'}</div>
       <div class="cart-item-info">
-        <h4>${i.nome}</h4>
+        <h4 ${editavel ? `style="cursor:pointer" onclick="editarItemCarrinho(${idx})"` : ''}>${i.nome}</h4>
         ${variacao ? `<div style="font-size:.78rem; color:var(--text-muted); font-weight:700;">${variacao}</div>` : ''}
         <div class="unit">${fmt(unit)} / un. ${noAtacado ? '<span style="color:var(--accent-dark); font-weight:700;">· atacado ✅</span>' : ''}</div>
         ${faltaAtacado > 0 ? `<div style="font-size:.74rem; color:var(--text-muted); margin-top:2px;">📦 +${faltaAtacado} un. para pagar ${fmt(i.precoAtacado)} cada</div>` : ''}
-        <div class="qty-box" style="margin-top:6px; display:inline-flex;">
-          <button onclick="cartQtd(${idx}, -1)">−</button>
-          <span>${i.qtd}</span>
-          <button onclick="cartQtd(${idx}, 1)">+</button>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:6px;">
+          <div class="qty-box" style="display:inline-flex;">
+            <button onclick="cartQtd(${idx}, -1)">−</button>
+            <span>${i.qtd}</span>
+            <button onclick="cartQtd(${idx}, 1)">+</button>
+          </div>
+          ${editavel ? `<button class="btn-editar-item" onclick="editarItemCarrinho(${idx})">✏️ Trocar opções</button>` : ''}
         </div>
       </div>
       <div class="cart-item-total">${fmt(unit * i.qtd)}</div>
@@ -4726,11 +4816,65 @@ function excluirProduto(id) {
 let importLinhas = []; // linhas validadas, prontas para importar
 
 // Reconhece variações comuns de nome de coluna (maiúsculas, acentos, sinônimos)
+// Gera a planilha modelo para o vendedor preencher
+function baixarModeloImportacao() {
+  const wb = XLSX.utils.book_new();
+
+  const cabecalho = ['nome', 'descricao', 'preco', 'precoAtacado', 'custo', 'estoque', 'categoria'];
+  const exemplos = [
+    ['Conjunto Legging Preto', 'Conjunto com top e legging em suplex, cintura alta.', 149.9, 129.9, 70, 12, 'Conjuntos'],
+    ['Short Saia Branco', 'Short saia cintura alta com short interno.', 29.9, '', 14, 8, 'Shorts'],
+    ['Top Alça Fina Rosa', 'Top de alça fina com bojo removível.', 59.9, 49.9, 26, 15, 'Tops'],
+  ];
+  const wsProdutos = XLSX.utils.aoa_to_sheet([cabecalho, ...exemplos]);
+  wsProdutos['!cols'] = [{ wch: 34 }, { wch: 52 }, { wch: 10 }, { wch: 13 }, { wch: 10 }, { wch: 9 }, { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, wsProdutos, 'Produtos');
+
+  const instrucoes = [
+    ['Como preencher esta planilha'],
+    [],
+    ['Coluna', 'Obrigatória?', 'O que colocar'],
+    ['nome', 'SIM', 'Nome do produto. Também é o nome da PASTA de fotos (veja abaixo).'],
+    ['descricao', 'não', 'Texto que aparece no card e na página do produto.'],
+    ['preco', 'SIM', 'Preço de varejo. Use vírgula ou ponto: 149,90 ou 149.90'],
+    ['precoAtacado', 'não', 'Preço a partir de 3 unidades. Deixe vazio se não trabalhar com atacado. Precisa ser MENOR que o preço.'],
+    ['custo', 'não', 'Quanto você pagou por peça. Não aparece para a cliente — serve para o Dashboard calcular o lucro.'],
+    ['estoque', 'não', 'Quantidade total. Cor, tamanho e numeração são cadastrados depois, no painel.'],
+    ['categoria', 'SIM', 'Ex: Conjuntos, Shorts, Tops, Leggings.'],
+    [],
+    ['Fotos dos produtos'],
+    ['1', 'Crie uma pasta principal (pode ter qualquer nome).'],
+    ['2', 'Dentro dela, crie UMA SUBPASTA POR PRODUTO.'],
+    ['3', 'O nome da subpasta deve ser igual ao "nome" do produto nesta planilha.'],
+    ['4', 'Coloque as fotos daquele produto dentro da subpasta (até 10 por produto).'],
+    ['5', 'A primeira foto em ordem alfabética vira a CAPA. Dica: nomeie 1.jpg, 2.jpg, 3.jpg...'],
+    ['6', 'Na hora de importar, escolha a PASTA PRINCIPAL — o sistema encontra as subpastas sozinho.'],
+    [],
+    ['Exemplo de organização das pastas'],
+    ['fotos/'],
+    ['   Conjunto Legging Preto/    ->  1.jpg  2.jpg  3.jpg'],
+    ['   Short Saia Branco/         ->  frente.jpg  costas.jpg'],
+    ['   Top Alça Fina Rosa/        ->  1.jpg  2.jpg'],
+    [],
+    ['Observações'],
+    ['-', 'Apague as 3 linhas de exemplo da aba "Produtos" antes de importar.'],
+    ['-', 'Não mude os nomes das colunas.'],
+    ['-', 'As fotos são opcionais: dá para importar só a planilha e adicionar as fotos depois.'],
+  ];
+  const wsInstr = XLSX.utils.aoa_to_sheet(instrucoes);
+  wsInstr['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 82 }];
+  XLSX.utils.book_append_sheet(wb, wsInstr, 'Instruções');
+
+  XLSX.writeFile(wb, 'modelo-importacao-vibe-fitness.xlsx');
+  toast('✅ Planilha modelo baixada!');
+}
+
 const ALIAS_COLUNAS = {
   nome: ['nome', 'produto', 'nome do produto'],
   descricao: ['descricao', 'descrição', 'desc'],
   preco: ['preco', 'preço', 'valor', 'preco varejo', 'preço varejo', 'varejo'],
   precoAtacado: ['precoatacado', 'preço atacado', 'preco atacado', 'atacado'],
+  custo: ['custo', 'preco de custo', 'preço de custo', 'precocusto', 'preço custo', 'preco custo'],
   estoque: ['estoque', 'qtd', 'quantidade', 'estoque atual'],
   categoria: ['categoria', 'categoria do produto']
 };
@@ -4789,6 +4933,7 @@ function lerPlanilhaImportacao(input) {
         const preco = parseNumeroBR(l.preco);
         const precoAtacado = (l.precoAtacado !== undefined && l.precoAtacado !== '') ? parseNumeroBR(l.precoAtacado) : null;
         const estoque = l.estoque !== undefined && l.estoque !== '' ? (parseInt(parseNumeroBR(l.estoque)) || 0) : 0;
+        const custo = (l.custo !== undefined && l.custo !== '') ? (parseNumeroBR(l.custo) || 0) : 0;
         const categoria = String(l.categoria || '').trim();
 
         const erros = [];
@@ -4799,7 +4944,7 @@ function lerPlanilhaImportacao(input) {
 
         return {
           linha: idx + 2, // +2 pois linha 1 é cabeçalho na planilha original
-          nome, descricao, preco, precoAtacado, estoque, categoria,
+          nome, descricao, preco, precoAtacado, custo, estoque, categoria,
           valido: erros.length === 0,
           erros
         };
@@ -4839,47 +4984,76 @@ async function lerImagensImportacao(input) {
   const status = document.getElementById('import-fotos-status');
   if (!arquivos.length) { status.textContent = '⚠️ Nenhuma imagem encontrada na pasta selecionada.'; return; }
 
-  status.textContent = `⏳ Processando ${arquivos.length} imagem(ns)...`;
+  status.textContent = `⏳ Lendo ${arquivos.length} imagem(ns)...`;
   document.getElementById('import-fotos-label').textContent = `🖼️ ${arquivos.length} arquivo(s) selecionado(s)`;
 
-  const imagens = arquivos.map(f => ({
-    file: f, nomeArquivo: f.name,
-    chave: chaveComparacao(f.name.replace(/\.[^.]+$/, '')),
+  const MAX_FOTOS = 10;
+
+  // Agrupa os arquivos pela PASTA em que estão. webkitRelativePath vem como
+  // "pastaEscolhida/NomeDoProduto/foto.jpg" — a pasta do produto é a última
+  // antes do arquivo. Fotos soltas na raiz caem em um grupo sem nome.
+  const grupos = new Map();
+  arquivos.forEach(f => {
+    const partes = (f.webkitRelativePath || f.name).split('/');
+    const pasta = partes.length >= 2 ? partes[partes.length - 2] : '';
+    if (!grupos.has(pasta)) grupos.set(pasta, []);
+    grupos.get(pasta).push(f);
+  });
+
+  // Ordem alfabética dentro da pasta: a primeira foto vira a capa
+  const pastas = [...grupos.entries()].map(([nome, files]) => ({
+    nome,
+    chave: chaveComparacao(nome),
+    files: files.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true })),
     usada: false
-  }));
+  })).filter(p => p.chave);
 
-  let comFoto = 0, semFoto = 0;
+  const semPastas = pastas.length === 0;
+
+  let comFoto = 0, semFoto = 0, totalFotos = 0;
   for (const linha of importLinhas) {
-    const alvo = chaveComparacao(linha.descricao || linha.nome);
-    if (!alvo) { linha.imagemArquivo = null; semFoto++; continue; }
+    linha.imagensArquivos = [];
+    const alvo = chaveComparacao(linha.nome);
+    if (!alvo || semPastas) { semFoto++; continue; }
 
-    let match = imagens.find(i => !i.usada && i.chave === alvo);                              // exata
-    if (!match) match = imagens.find(i => !i.usada && (i.chave.includes(alvo) || alvo.includes(i.chave))); // contém
-    if (!match) {                                                                             // similar
+    let match = pastas.find(p => !p.usada && p.chave === alvo);                                   // exata
+    if (!match) match = pastas.find(p => !p.usada && (p.chave.includes(alvo) || alvo.includes(p.chave))); // contém
+    if (!match) {                                                                                 // parecida
       let melhor = null, score = 0.7;
-      for (const i of imagens) {
-        if (i.usada) continue;
-        const s = similaridade(alvo, i.chave);
-        if (s > score) { score = s; melhor = i; }
+      for (const p of pastas) {
+        if (p.usada) continue;
+        const s = similaridade(alvo, p.chave);
+        if (s > score) { score = s; melhor = p; }
       }
       match = melhor;
     }
-    if (match) { match.usada = true; linha.imagemArquivo = match; comFoto++; }
-    else { linha.imagemArquivo = null; semFoto++; }
+    if (match) {
+      match.usada = true;
+      linha.imagensArquivos = match.files.slice(0, MAX_FOTOS);
+      linha.pastaFotos = match.nome;
+      totalFotos += linha.imagensArquivos.length;
+      comFoto++;
+    } else semFoto++;
   }
 
+  // Converte tudo para base64 (mesma compressão do cadastro manual)
   let feitas = 0;
   for (const linha of importLinhas) {
-    if (!linha.imagemArquivo) continue;
-    linha.imagemBase64 = await processarImagem(linha.imagemArquivo.file, 700, null, 0.7);
-    feitas++;
-    if (feitas % 10 === 0) status.textContent = `⏳ Processando imagens... ${feitas}/${comFoto}`;
+    linha.imagensBase64 = [];
+    for (const f of (linha.imagensArquivos || [])) {
+      linha.imagensBase64.push(await processarImagem(f, 700, null, 0.7));
+      feitas++;
+      if (feitas % 5 === 0) status.textContent = `⏳ Processando imagens... ${feitas}/${totalFotos}`;
+    }
+    linha.imagemBase64 = linha.imagensBase64[0] || null; // capa, usada na pré-visualização
   }
 
-  const naoUsadas = imagens.filter(i => !i.usada).length;
-  status.innerHTML = `✅ <strong>${comFoto}</strong> produto(s) com foto` +
-    (semFoto ? ` · <span style="color:var(--danger)">${semFoto} sem foto</span>` : '') +
-    (naoUsadas ? ` · ${naoUsadas} imagem(ns) não usada(s)` : '');
+  const sobraram = pastas.filter(p => !p.usada);
+  status.innerHTML = semPastas
+    ? '⚠️ As imagens não estavam dentro de subpastas. Crie uma pasta por produto, com o nome do produto, e selecione a pasta que contém todas elas.'
+    : `✅ <strong>${comFoto}</strong> produto(s) com foto (${totalFotos} imagem(ns))` +
+      (semFoto ? ` · <span style="color:var(--danger)">${semFoto} sem foto</span>` : '') +
+      (sobraram.length ? ` · pasta(s) sem produto correspondente: ${sobraram.map(p => p.nome).join(', ')}` : '');
 
   renderPreviewImportacao();
   input.value = '';
@@ -4890,15 +5064,19 @@ function renderPreviewImportacao() {
   const invalidas = importLinhas.length - validas;
 
   const comFoto = importLinhas.filter(l => l.imagemBase64).length;
+  const totalFotos = importLinhas.reduce((s, l) => s + ((l.imagensBase64 || []).length), 0);
   document.getElementById('import-resumo').innerHTML =
     `${importLinhas.length} linha(s) lida(s) — <span style="color:var(--accent-dark)">${validas} pronta(s) para importar</span>` +
     (invalidas ? ` · <span style="color:var(--danger)">${invalidas} com erro (serão ignoradas)</span>` : '') +
-    (comFoto ? ` · 🖼️ ${comFoto} com foto` : '');
+    (comFoto ? ` · 🖼️ ${comFoto} com foto (${totalFotos} imagem(ns))` : '');
 
   document.getElementById('import-tbody').innerHTML = importLinhas.map(l => `
     <tr>
       <td>${l.linha}</td>
-      <td>${l.imagemBase64 ? `<img src="${l.imagemBase64}" style="width:38px;height:38px;border-radius:6px;object-fit:cover">` : '<span style="color:var(--text-muted);font-size:.75rem">—</span>'}</td>
+      <td>${l.imagemBase64 ? `<div style="position:relative; width:38px;">
+             <img src="${l.imagemBase64}" style="width:38px;height:38px;border-radius:6px;object-fit:cover">
+             ${(l.imagensBase64 || []).length > 1 ? `<span style="position:absolute;bottom:-3px;right:-6px;background:var(--primary);color:#fff;font-size:.6rem;font-weight:800;padding:1px 5px;border-radius:9px;">${l.imagensBase64.length}</span>` : ''}
+           </div>` : '<span style="color:var(--text-muted);font-size:.75rem">—</span>'}</td>
       <td>${l.nome || '<em style="color:var(--text-muted)">—</em>'}</td>
       <td>${l.preco !== null ? fmt(l.preco) : '—'}</td>
       <td>${l.precoAtacado !== null && l.precoAtacado !== undefined ? fmt(l.precoAtacado) : '—'}</td>
@@ -4939,15 +5117,16 @@ async function confirmarImportacao() {
       const batch = db.batch();
       bloco.forEach(l => {
         const ref = db.collection('produtos').doc();
-        const img = l.imagemBase64 || '';
+        const imgs = (l.imagensBase64 && l.imagensBase64.length) ? l.imagensBase64 : (l.imagemBase64 ? [l.imagemBase64] : []);
         batch.set(ref, {
           nome: l.nome,
           descricao: l.descricao,
           preco: l.preco,
           precoAtacado: l.precoAtacado,
+          custo: l.custo || 0,
           estoque: l.estoque,
           categoria: l.categoria,
-          imagens: img ? [img] : [], capa: 0, imagem: img,
+          imagens: imgs, capa: 0, imagem: imgs[0] || '',
           ativo: true,
           criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
           atualizadoEm: firebase.firestore.FieldValue.serverTimestamp()
