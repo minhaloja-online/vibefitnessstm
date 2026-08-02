@@ -371,6 +371,23 @@
     display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
   }
   .product-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Carrossel de fotos dentro do card */
+  .card-track { display: flex; width: 100%; height: 100%; transition: transform .45s cubic-bezier(.4,0,.2,1); }
+  .card-track img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+  .card-dots { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 3; pointer-events: none; }
+  .card-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: 0 0 3px rgba(0,0,0,.4); transition: all .25s; }
+  .card-dot.on { background: #fff; width: 17px; border-radius: 3px; }
+  .card-seta {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 28px; height: 28px; border: none; border-radius: 50%; cursor: pointer;
+    background: rgba(255,255,255,.85); color: var(--primary); font-size: .9rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .2s;
+    box-shadow: 0 1px 6px rgba(0,0,0,.2);
+  }
+  .card-seta.esq { left: 7px; } .card-seta.dir { right: 7px; }
+  .product-card:hover .card-seta { opacity: 1; }
+  @media (hover: none) { .card-seta { display: none; } }
   .product-img .placeholder { font-size: 2.8rem; opacity: .35; }
   .cat-tag {
     position: absolute; top: 10px; left: 10px; background: rgba(94,63,122,0.85); color: #fff;
@@ -1606,10 +1623,113 @@ function selecionarVariante(id, campo, valor) {
   if (document.getElementById('favoritos').classList.contains('active')) renderFavoritos();
 }
 
+/* ==================== CARROSSEL DE FOTOS NO CARD ==================== */
+// Fotos do card, com a capa sempre em primeiro lugar.
+function fotosCard(p) {
+  const imgs = getImagens(p);
+  if (imgs.length <= 1) return imgs;
+  const c = (p.capa && p.capa < imgs.length) ? p.capa : 0;
+  return [imgs[c], ...imgs.filter((_, i) => i !== c)];
+}
+
+const fotoIdx = {};       // índice da foto visível, por produto
+let ultimoArraste = 0;    // marca o fim de um deslize, para o clique não abrir o produto sem querer
+
+// Move o carrossel sem redesenhar o card (redesenhar cortaria a animação)
+function mostrarFoto(pid, i, total) {
+  if (!total || total <= 1) return;
+  fotoIdx[pid] = ((i % total) + total) % total;
+  const track = document.getElementById('track-' + pid);
+  if (track) track.style.transform = `translateX(-${fotoIdx[pid] * 100}%)`;
+  const dots = document.querySelectorAll(`[data-dots="${pid}"] .card-dot`);
+  dots.forEach((d, k) => d.classList.toggle('on', k === fotoIdx[pid]));
+}
+
+function passarFoto(pid, passo) {
+  const track = document.getElementById('track-' + pid);
+  if (!track) return;
+  const total = Number(track.dataset.total) || 1;
+  mostrarFoto(pid, (fotoIdx[pid] || 0) + passo, total);
+  track.dataset.mexido = Date.now(); // adia o avanço automático depois de uma ação manual
+}
+
+// Avanço automático: um único relógio cuida de todos os cards visíveis.
+setInterval(() => {
+  if (document.hidden) return;
+  document.querySelectorAll('.card-track').forEach(track => {
+    const total = Number(track.dataset.total) || 1;
+    if (total <= 1) return;
+    if (track.dataset.pausado === '1') return;                        // mouse em cima
+    if (Date.now() - Number(track.dataset.mexido || 0) < 5000) return; // acabou de mexer na mão
+    const pid = track.dataset.pid;
+    mostrarFoto(pid, (fotoIdx[pid] || 0) + 1, total);
+  });
+}, 5000);
+
+// Pausa enquanto a pessoa está olhando aquele card
+document.addEventListener('mouseover', e => {
+  const img = e.target.closest && e.target.closest('.product-img');
+  if (!img) return;
+  const track = img.querySelector('.card-track');
+  if (track) track.dataset.pausado = '1';
+});
+document.addEventListener('mouseout', e => {
+  const img = e.target.closest && e.target.closest('.product-img');
+  if (!img) return;
+  const track = img.querySelector('.card-track');
+  if (track) track.dataset.pausado = '0';
+});
+
+/* ---- Deslizar com o dedo (celular) e arrastando com o mouse (computador) ---- */
+let arraste = null;
+
+function iniciarArraste(alvo, x, y) {
+  const track = alvo.closest && alvo.closest('.card-track');
+  if (!track) return;
+  const total = Number(track.dataset.total) || 1;
+  if (total <= 1) return;
+  arraste = { pid: track.dataset.pid, total, x0: x, y0: y, track, horizontal: false };
+}
+
+function moverArraste(x, y, evento) {
+  if (!arraste) return;
+  const dx = x - arraste.x0, dy = y - arraste.y0;
+  if (!arraste.horizontal && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) arraste.horizontal = true;
+  if (arraste.horizontal) {
+    // acompanha o dedo/mouse enquanto arrasta
+    arraste.track.style.transition = 'none';
+    const base = -(fotoIdx[arraste.pid] || 0) * 100;
+    arraste.track.style.transform = `translateX(calc(${base}% + ${dx}px))`;
+    if (evento && evento.cancelable) evento.preventDefault(); // não rola a página junto
+  }
+}
+
+function terminarArraste(x) {
+  if (!arraste) return;
+  const { pid, total, track, x0, horizontal } = arraste;
+  track.style.transition = '';
+  if (horizontal) {
+    const dx = x - x0;
+    if (Math.abs(dx) > 45) mostrarFoto(pid, (fotoIdx[pid] || 0) + (dx < 0 ? 1 : -1), total);
+    else mostrarFoto(pid, fotoIdx[pid] || 0, total); // não passou do limite: volta ao lugar
+    track.dataset.mexido = Date.now();
+    ultimoArraste = Date.now();
+  }
+  arraste = null;
+}
+
+document.addEventListener('touchstart', e => iniciarArraste(e.target, e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+document.addEventListener('touchmove',  e => moverArraste(e.touches[0].clientX, e.touches[0].clientY, e), { passive: false });
+document.addEventListener('touchend',   e => terminarArraste(e.changedTouches[0].clientX));
+document.addEventListener('mousedown',  e => { if (e.button === 0) iniciarArraste(e.target, e.clientX, e.clientY); });
+document.addEventListener('mousemove',  e => moverArraste(e.clientX, e.clientY, e));
+document.addEventListener('mouseup',    e => terminarArraste(e.clientX));
+
 function cardProduto(p) {
-  const capa = getCapa(p);
-  const numFotos = getImagens(p).length;
+  const fotos = fotosCard(p);
   const fav = ehFavorito(p.id);
+  if (fotoIdx[p.id] === undefined || fotoIdx[p.id] >= fotos.length) fotoIdx[p.id] = 0;
+  const idxFoto = fotos.length ? fotoIdx[p.id] : 0;
   const precisaCor = Array.isArray(p.cores) && p.cores.length > 0;
   const precisaTam = temTamanho(p);
   const precisaNum = temNumeracao(p);
@@ -1619,11 +1739,20 @@ function cardProduto(p) {
   const rotuloBtn = esgotadoTudo ? 'Esgotado' : (faltaEscolher ? 'Escolha as opções' : '+ Adicionar');
   return `
     <div class="product-card">
-      <div class="product-img" style="cursor:pointer" onclick="abrirProduto('${p.id}')" title="Ver detalhes">
-        ${capa ? `<img src="${capa}" alt="${p.nome}">` : `<span class="placeholder">📦</span>`}
+      <div class="product-img" data-pid="${p.id}" style="cursor:pointer" onclick="abrirProduto('${p.id}')" title="Ver detalhes">
+        ${fotos.length ? `
+          <div class="card-track" id="track-${p.id}" data-pid="${p.id}" data-total="${fotos.length}" style="transform:translateX(-${idxFoto * 100}%)">
+            ${fotos.map(src => `<img src="${src}" alt="${p.nome}" draggable="false">`).join('')}
+          </div>
+          ${fotos.length > 1 ? `
+            <button class="card-seta esq" onclick="event.stopPropagation(); passarFoto('${p.id}', -1)" aria-label="Foto anterior">‹</button>
+            <button class="card-seta dir" onclick="event.stopPropagation(); passarFoto('${p.id}', 1)" aria-label="Próxima foto">›</button>
+            <div class="card-dots" data-dots="${p.id}">
+              ${fotos.map((_, k) => `<span class="card-dot${k === idxFoto ? ' on' : ''}"></span>`).join('')}
+            </div>` : ''}
+        ` : `<span class="placeholder">📦</span>`}
         ${p.categoria ? `<span class="cat-tag">${p.categoria}</span>` : ''}
         ${esgotadoTudo ? `<span class="stock-tag">Esgotado</span>` : ''}
-        ${numFotos > 1 ? `<span style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:12px;">📷 ${numFotos}</span>` : ''}
       </div>
       <button class="fav-btn ${fav ? 'on' : ''}" title="${fav ? 'Remover dos favoritos' : 'Salvar nos favoritos'}" onclick="event.stopPropagation(); alternarFavorito('${p.id}')">${fav ? '❤️' : '🤍'}</button>
       <div class="product-body">
@@ -1703,6 +1832,9 @@ function precoItemCarrinho(item) {
 let modalProd = null, modalQtd = 1, modalImgs = [], modalVar = { cor: '', tamanho: '', numeracao: '' };
 
 function abrirProduto(id) {
+  // Um deslize no carrossel termina em "clique" para o navegador. Se a pessoa
+  // acabou de arrastar a foto, ela não quis abrir o produto.
+  if (Date.now() - ultimoArraste < 350) return;
   modalProd = produtos.find(p => p.id === id);
   if (!modalProd) return;
   modalQtd = 1;
