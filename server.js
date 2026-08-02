@@ -109,11 +109,16 @@ app.use(express.static('public'));
 const ORIGENS = (process.env.ORIGENS_PERMITIDAS || '')
   .split(',')
   .map(s => s.trim())
+  // Aceita o valor mesmo se digitado com barra no fim ou com caminho colado
+  // (ex: ".github.io/vibefitnessstm"): o navegador só manda esquema + domínio.
+  .map(s => { try { return new URL(s).origin; } catch (_) { return s.replace(/\/+$/, ''); } })
   .filter(Boolean);
 
 app.use(cors({
   origin: (origem, cb) => {
     if (!origem || ORIGENS.length === 0 || ORIGENS.includes(origem)) return cb(null, true);
+    // Aparece nos Logs do Render e diz exatamente o que colocar em ORIGENS_PERMITIDAS
+    console.warn(`CORS bloqueado. Origem recebida: "${origem}". Permitidas: ${JSON.stringify(ORIGENS)}`);
     cb(new Error('Origem não autorizada'));
   },
 }));
@@ -428,6 +433,9 @@ app.get('/api/status', (req, res) => {
     // Se for diferente, o servidor procura o pedido no banco errado e responde
     // "Pedido não encontrado" em toda tentativa de pagamento.
     projetoFirebase: chaveFirebase.project_id,
+    // Precisa conter EXATAMENTE a origem do site (esquema + domínio, sem caminho
+    // e sem barra no fim). Se estiver vazio, qualquer origem é aceita.
+    origensPermitidas: ORIGENS,
   });
 });
 
