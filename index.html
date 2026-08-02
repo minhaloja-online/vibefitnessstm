@@ -625,6 +625,16 @@
   .st-cancelado { background:#fdecea; color:#b23b2e; }
   .imp-ok { background:#e8f7ee; color:#1d7a46; }
   .imp-erro { background:#fdecea; color:#b23b2e; }
+  .imp-modo { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:.2rem 0 1.1rem; }
+  @media (max-width:640px) { .imp-modo { grid-template-columns:1fr; } }
+  .imp-modo-btn { text-align:left; padding:.85rem 1rem; border:1.5px solid var(--border); border-radius:12px;
+                  background:var(--bg); cursor:pointer; font-family:inherit; transition:all .18s; display:flex;
+                  flex-direction:column; gap:3px; }
+  .imp-modo-btn strong { font-size:.9rem; color:var(--text); }
+  .imp-modo-btn small { font-size:.75rem; color:var(--text-muted); line-height:1.4; }
+  .imp-modo-btn:hover { border-color:var(--primary-light); }
+  .imp-modo-btn.active { border-color:var(--primary); background:#F6ECD6; box-shadow:0 0 0 3px rgba(94,63,122,.09); }
+  .imp-modo-btn.active strong { color:var(--primary); }
   .imp-badge { font-size:.7rem; font-weight:800; padding:3px 9px; border-radius:20px; white-space:nowrap; }
   .msg { padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 0.9rem; display: none; }
   .msg.ok { background: #e8f7ee; color: #1d7a46; border: 1px solid #b9e5cc; display: block; }
@@ -1028,9 +1038,19 @@
       <div id="aview-produtos" style="display:none">
       <div class="panel" style="margin-bottom:1.2rem;">
         <h3>📥 Importar Produtos em Massa</h3>
-        <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:.8rem;">
-          Envie uma planilha (.xlsx ou .csv) com os produtos. Colunas aceitas: <code>nome</code>, <code>descricao</code>, <code>preco</code>, <code>precoAtacado</code>, <code>custo</code>, <code>estoque</code>, <code>categoria</code>.
-        </p>
+
+        <div class="imp-modo">
+          <button class="imp-modo-btn active" data-modo="simples" onclick="mudarModoImport('simples')">
+            <strong>📦 Estoque simples</strong>
+            <small>Uma linha por produto. Quantidade única, sem cor nem tamanho.</small>
+          </button>
+          <button class="imp-modo-btn" data-modo="grade" onclick="mudarModoImport('grade')">
+            <strong>🎨 Grade de estoque</strong>
+            <small>Uma linha por variação. Cor e tamanho com quantidade em cada.</small>
+          </button>
+        </div>
+
+        <p style="font-size:.85rem; color:var(--text-muted); margin-bottom:.8rem;" id="import-colunas-txt"></p>
         <button class="btn-clear" style="width:100%; margin-bottom:1rem;" onclick="baixarModeloImportacao()">⬇️ Baixar planilha modelo</button>
         <div class="img-drop" onclick="document.getElementById('import-file').click()">
           <span id="import-file-label">📄 Clique para selecionar a planilha (.xlsx ou .csv)</span>
@@ -4816,31 +4836,117 @@ function excluirProduto(id) {
 let importLinhas = []; // linhas validadas, prontas para importar
 
 // Reconhece variações comuns de nome de coluna (maiúsculas, acentos, sinônimos)
+/* ---------- Modo da importação: estoque simples ou grade de variações ---------- */
+let importModo = 'simples';
+
+const COLUNAS_TXT = {
+  simples: 'Uma linha por produto. Colunas: <code>nome</code>, <code>descricao</code>, <code>categoria</code>, <code>quantidade</code>, <code>preco</code>, <code>precoAtacado</code>, <code>custo</code>.',
+  grade:   'Uma linha por variação — repita o <code>nome</code> em cada linha do mesmo produto. Colunas: <code>nome</code>, <code>descricao</code>, <code>categoria</code>, <code>tamanho</code>, <code>cor</code>, <code>quantidade</code>, <code>preco</code>, <code>precoAtacado</code>, <code>custo</code>. Opcional: <code>numeracao</code> (calça/short) e <code>hex</code> (cor exata em #RRGGBB).'
+};
+
+function mudarModoImport(modo) {
+  if (importLinhas.length && !confirm('Trocar o modo vai descartar a planilha já carregada. Continuar?')) return;
+  importModo = modo;
+  document.querySelectorAll('.imp-modo-btn').forEach(b => b.classList.toggle('active', b.dataset.modo === modo));
+  document.getElementById('import-colunas-txt').innerHTML = COLUNAS_TXT[modo];
+  cancelarImportacao();
+}
+
+// Nomes de cor mais usados na loja -> cor exata. Se a planilha trouxer a coluna
+// "hex", ela manda. Se a cor não estiver aqui, gera um tom estável a partir do
+// nome, para nunca ficar sem bolinha no site.
+const CORES_CONHECIDAS = {
+  preto:'#111111', branco:'#FFFFFF', cinza:'#9AA0A6', grafite:'#4A4A4A', chumbo:'#3A3A3A',
+  rosa:'#F06AA8', 'rosa claro':'#F9B8D3', 'rosa bebe':'#F9C6D8', pink:'#E91E8C', fucsia:'#D6218A',
+  vermelho:'#D32F2F', vinho:'#7B1E30', bordo:'#6D1B2E', coral:'#FF6F5E', salmao:'#FA8072',
+  laranja:'#F57C20', amarelo:'#F5C518', mostarda:'#D1861F', dourado:'#C9A227',
+  verde:'#2E9E5B', 'verde militar':'#4B5320', 'verde oliva':'#6B7A3A', 'verde agua':'#7FD1C1', menta:'#9FE2C0',
+  azul:'#1E6BD6', 'azul claro':'#7EC8F0', 'azul marinho':'#1B2A5B', marinho:'#1B2A5B', turquesa:'#1FBFC4',
+  roxo:'#5E3F7A', lilas:'#B79BD1', lavanda:'#C7B6E0', violeta:'#7A4FA8',
+  bege:'#E3D3B8', nude:'#E6C7B0', creme:'#F3E9D6', marrom:'#6B4A2F', caramelo:'#A9713C', cafe:'#4B3222',
+  offwhite:'#F5F2EA', 'off white':'#F5F2EA', prata:'#C4C7CC', 'tie dye':'#B07FD1', estampado:'#B07FD1',
+};
+
+function corParaHex(nome, hexPlanilha) {
+  const h = String(hexPlanilha || '').trim();
+  if (/^#?[0-9a-f]{6}$/i.test(h)) return h.startsWith('#') ? h : '#' + h;
+  const chave = String(nome || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (CORES_CONHECIDAS[chave]) return CORES_CONHECIDAS[chave];
+  // tom estável derivado do nome, para a mesma cor sair sempre igual
+  let soma = 0;
+  for (let i = 0; i < chave.length; i++) soma = (soma * 31 + chave.charCodeAt(i)) % 360;
+  return `hsl(${soma}, 42%, 52%)`;
+}
+
 // Gera a planilha modelo para o vendedor preencher
 function baixarModeloImportacao() {
+  return importModo === 'grade' ? modeloGrade() : modeloSimples();
+}
+
+function modeloSimples() {
   const wb = XLSX.utils.book_new();
-
-  const cabecalho = ['nome', 'descricao', 'preco', 'precoAtacado', 'custo', 'estoque', 'categoria'];
+  const cabecalho = ['nome', 'descricao', 'categoria', 'quantidade', 'preco', 'precoAtacado', 'custo'];
   const exemplos = [
-    ['Conjunto Legging Preto', 'Conjunto com top e legging em suplex, cintura alta.', 149.9, 129.9, 70, 12, 'Conjuntos'],
-    ['Short Saia Branco', 'Short saia cintura alta com short interno.', 29.9, '', 14, 8, 'Shorts'],
-    ['Top Alça Fina Rosa', 'Top de alça fina com bojo removível.', 59.9, 49.9, 26, 15, 'Tops'],
+    ['Conjunto Legging Preto', 'Conjunto com top e legging em suplex, cintura alta.', 'Conjuntos', 12, 149.9, 129.9, 70],
+    ['Short Saia Branco', 'Short saia cintura alta com short interno.', 'Shorts', 8, 29.9, '', 14],
+    ['Top Alça Fina Rosa', 'Top de alça fina com bojo removível.', 'Tops', 15, 59.9, 49.9, 26],
   ];
-  const wsProdutos = XLSX.utils.aoa_to_sheet([cabecalho, ...exemplos]);
-  wsProdutos['!cols'] = [{ wch: 34 }, { wch: 52 }, { wch: 10 }, { wch: 13 }, { wch: 10 }, { wch: 9 }, { wch: 16 }];
-  XLSX.utils.book_append_sheet(wb, wsProdutos, 'Produtos');
-
-  const instrucoes = [
-    ['Como preencher esta planilha'],
-    [],
-    ['Coluna', 'Obrigatória?', 'O que colocar'],
-    ['nome', 'SIM', 'Nome do produto. Também é o nome da PASTA de fotos (veja abaixo).'],
+  const ws = XLSX.utils.aoa_to_sheet([cabecalho, ...exemplos]);
+  ws['!cols'] = [{ wch: 32 }, { wch: 50 }, { wch: 16 }, { wch: 12 }, { wch: 10 }, { wch: 13 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(instrucoesBase([
+    ['nome', 'SIM', 'Nome do produto. Também é o nome da PASTA de fotos.'],
     ['descricao', 'não', 'Texto que aparece no card e na página do produto.'],
-    ['preco', 'SIM', 'Preço de varejo. Use vírgula ou ponto: 149,90 ou 149.90'],
-    ['precoAtacado', 'não', 'Preço a partir de 3 unidades. Deixe vazio se não trabalhar com atacado. Precisa ser MENOR que o preço.'],
-    ['custo', 'não', 'Quanto você pagou por peça. Não aparece para a cliente — serve para o Dashboard calcular o lucro.'],
-    ['estoque', 'não', 'Quantidade total. Cor, tamanho e numeração são cadastrados depois, no painel.'],
     ['categoria', 'SIM', 'Ex: Conjuntos, Shorts, Tops, Leggings.'],
+    ['quantidade', 'não', 'Quantidade total em estoque. Sem separar por cor ou tamanho.'],
+    ['preco', 'SIM', 'Preço de varejo. Use vírgula ou ponto: 149,90 ou 149.90'],
+    ['precoAtacado', 'não', 'Preço a partir de 3 unidades. Precisa ser MENOR que o preço. Vazio = sem atacado.'],
+    ['custo', 'não', 'Quanto você pagou por peça. Não aparece para a cliente — alimenta o lucro no Dashboard.'],
+  ], 'Modo: ESTOQUE SIMPLES — uma linha por produto')), 'Instruções');
+  XLSX.writeFile(wb, 'modelo-estoque-simples-vibe-fitness.xlsx');
+  toast('✅ Planilha modelo baixada!');
+}
+
+function modeloGrade() {
+  const wb = XLSX.utils.book_new();
+  const cabecalho = ['nome', 'descricao', 'categoria', 'tamanho', 'numeracao', 'cor', 'hex', 'quantidade', 'preco', 'precoAtacado', 'custo'];
+  const exemplos = [
+    ['Conjunto Legging Preto', 'Conjunto top + legging em suplex.', 'Conjuntos', 'P', '', 'Preto', '', 4, 149.9, 129.9, 70],
+    ['Conjunto Legging Preto', '', '', 'M', '', 'Preto', '', 6, '', '', ''],
+    ['Conjunto Legging Preto', '', '', 'G', '', 'Preto', '', 3, '', '', ''],
+    ['Conjunto Legging Preto', '', '', 'P', '', 'Rosa', '', 5, '', '', ''],
+    ['Conjunto Legging Preto', '', '', 'M', '', 'Rosa', '', 2, '', '', ''],
+    ['Short Saia Branco', 'Short saia com short interno.', 'Shorts', '', '38', 'Branco', '', 5, 29.9, '', 14],
+    ['Short Saia Branco', '', '', '', '40', 'Branco', '', 7, '', '', ''],
+    ['Short Saia Branco', '', '', '', '38', 'Preto', '', 4, '', '', ''],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([cabecalho, ...exemplos]);
+  ws['!cols'] = [{ wch: 30 }, { wch: 38 }, { wch: 14 }, { wch: 10 }, { wch: 11 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 13 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Produtos');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(instrucoesBase([
+    ['nome', 'SIM', 'REPITA o mesmo nome em todas as linhas do mesmo produto. É assim que as linhas viram um produto só.'],
+    ['descricao', 'não', 'Pode preencher só na primeira linha do produto.'],
+    ['categoria', 'SIM', 'Pode preencher só na primeira linha do produto.'],
+    ['tamanho', 'depende', 'Tamanho da blusa/top: PP, P, M, G, GG. Deixe vazio se a peça não tem.'],
+    ['numeracao', 'depende', 'Numeração da calça/short: 36, 38, 40... Deixe vazio se a peça não tem.'],
+    ['cor', 'depende', 'Nome da cor. Deixe vazio se a peça não tem variação de cor.'],
+    ['hex', 'não', 'Cor exata em #RRGGBB. Se vazio, o sistema reconhece pelo nome (preto, rosa, azul marinho...).'],
+    ['quantidade', 'SIM', 'Quantas peças você tem DESSA combinação exata.'],
+    ['preco', 'SIM', 'Preço de varejo. Pode preencher só na primeira linha do produto.'],
+    ['precoAtacado', 'não', 'A partir de 3 unidades. Precisa ser MENOR que o preço.'],
+    ['custo', 'não', 'Custo por peça. Alimenta o lucro no Dashboard.'],
+  ], 'Modo: GRADE DE ESTOQUE — uma linha por variação')), 'Instruções');
+  XLSX.writeFile(wb, 'modelo-grade-estoque-vibe-fitness.xlsx');
+  toast('✅ Planilha modelo baixada!');
+}
+
+// Bloco de instruções comum aos dois modelos
+function instrucoesBase(colunas, titulo) {
+  return [
+    [titulo], [],
+    ['Coluna', 'Obrigatória?', 'O que colocar'],
+    ...colunas,
     [],
     ['Fotos dos produtos'],
     ['1', 'Crie uma pasta principal (pode ter qualquer nome).'],
@@ -4854,19 +4960,12 @@ function baixarModeloImportacao() {
     ['fotos/'],
     ['   Conjunto Legging Preto/    ->  1.jpg  2.jpg  3.jpg'],
     ['   Short Saia Branco/         ->  frente.jpg  costas.jpg'],
-    ['   Top Alça Fina Rosa/        ->  1.jpg  2.jpg'],
     [],
     ['Observações'],
-    ['-', 'Apague as 3 linhas de exemplo da aba "Produtos" antes de importar.'],
+    ['-', 'Apague as linhas de exemplo da aba "Produtos" antes de importar.'],
     ['-', 'Não mude os nomes das colunas.'],
     ['-', 'As fotos são opcionais: dá para importar só a planilha e adicionar as fotos depois.'],
   ];
-  const wsInstr = XLSX.utils.aoa_to_sheet(instrucoes);
-  wsInstr['!cols'] = [{ wch: 16 }, { wch: 14 }, { wch: 82 }];
-  XLSX.utils.book_append_sheet(wb, wsInstr, 'Instruções');
-
-  XLSX.writeFile(wb, 'modelo-importacao-vibe-fitness.xlsx');
-  toast('✅ Planilha modelo baixada!');
 }
 
 const ALIAS_COLUNAS = {
@@ -4876,6 +4975,10 @@ const ALIAS_COLUNAS = {
   precoAtacado: ['precoatacado', 'preço atacado', 'preco atacado', 'atacado'],
   custo: ['custo', 'preco de custo', 'preço de custo', 'precocusto', 'preço custo', 'preco custo'],
   estoque: ['estoque', 'qtd', 'quantidade', 'estoque atual'],
+  tamanho: ['tamanho', 'tam', 'tamanho blusa', 'tamanho da blusa'],
+  numeracao: ['numeracao', 'numeração', 'numero', 'número', 'num', 'numeracao short', 'numeração calça'],
+  cor: ['cor', 'cores', 'nome da cor'],
+  hex: ['hex', 'cor hex', 'corhex', 'codigo da cor', 'código da cor'],
   categoria: ['categoria', 'categoria do produto']
 };
 
@@ -4909,6 +5012,117 @@ function parseNumeroBR(v) {
   return isNaN(n) ? null : n;
 }
 
+// Modo ESTOQUE SIMPLES: cada linha da planilha vira um produto
+function montarLinhasSimples(linhasRaw) {
+  return linhasRaw.map((linhaObj, idx) => {
+    const l = mapearLinha(linhaObj);
+    const nome = String(l.nome || '').trim();
+    const descricao = String(l.descricao || '').trim();
+    const preco = parseNumeroBR(l.preco);
+    const precoAtacado = (l.precoAtacado !== undefined && l.precoAtacado !== '') ? parseNumeroBR(l.precoAtacado) : null;
+    const estoque = (l.estoque !== undefined && l.estoque !== '') ? (parseInt(parseNumeroBR(l.estoque)) || 0) : 0;
+    const custo = (l.custo !== undefined && l.custo !== '') ? (parseNumeroBR(l.custo) || 0) : 0;
+    const categoria = String(l.categoria || '').trim();
+
+    const erros = [];
+    if (!nome) erros.push('nome vazio');
+    if (preco === null) erros.push('preço inválido');
+    if (!categoria) erros.push('categoria vazia');
+    if (precoAtacado !== null && (isNaN(precoAtacado) || (preco !== null && precoAtacado >= preco))) erros.push('atacado deve ser menor que o varejo');
+
+    return {
+      linha: idx + 2, // +2 pois a linha 1 é o cabeçalho
+      nome, descricao, preco, precoAtacado, custo, estoque, categoria,
+      cores: [], tamanhos: [], numeracoes: [], variacoes: [],
+      valido: erros.length === 0, erros
+    };
+  });
+}
+
+// Modo GRADE: várias linhas com o mesmo "nome" viram UM produto com a grade montada.
+// Os dados do produto (preço, categoria, descrição, custo) podem vir preenchidos
+// só na primeira linha — as demais herdam.
+function montarLinhasGrade(linhasRaw) {
+  const porNome = new Map();
+
+  linhasRaw.forEach((linhaObj, idx) => {
+    const l = mapearLinha(linhaObj);
+    const nome = String(l.nome || '').trim();
+    const numLinha = idx + 2;
+    if (!nome) {
+      // linha sem nome não tem como ser agrupada
+      porNome.set('__erro__' + idx, {
+        linha: numLinha, nome: '', descricao: '', preco: null, precoAtacado: null, custo: 0,
+        estoque: 0, categoria: '', cores: [], tamanhos: [], numeracoes: [], variacoes: [],
+        valido: false, erros: ['nome vazio']
+      });
+      return;
+    }
+
+    const chave = nome.toLowerCase();
+    if (!porNome.has(chave)) {
+      porNome.set(chave, {
+        linha: numLinha, nome, descricao: '', preco: null, precoAtacado: null, custo: 0,
+        estoque: 0, categoria: '',
+        cores: [], tamanhos: [], numeracoes: [], variacoes: [],
+        _hex: {}, _linhas: [], valido: true, erros: []
+      });
+    }
+    const prod = porNome.get(chave);
+    prod._linhas.push(numLinha);
+
+    // Dados do produto: a primeira linha que trouxer o valor manda
+    const desc = String(l.descricao || '').trim();
+    if (desc && !prod.descricao) prod.descricao = desc;
+    const cat = String(l.categoria || '').trim();
+    if (cat && !prod.categoria) prod.categoria = cat;
+    const pr = parseNumeroBR(l.preco);
+    if (pr !== null && prod.preco === null) prod.preco = pr;
+    if (l.precoAtacado !== undefined && l.precoAtacado !== '' && prod.precoAtacado === null) {
+      prod.precoAtacado = parseNumeroBR(l.precoAtacado);
+    }
+    const cu = (l.custo !== undefined && l.custo !== '') ? (parseNumeroBR(l.custo) || 0) : 0;
+    if (cu && !prod.custo) prod.custo = cu;
+
+    // A variação desta linha
+    const tamanho  = String(l.tamanho  || '').trim().toUpperCase();
+    const numeracao = String(l.numeracao || '').trim().toUpperCase();
+    const cor      = String(l.cor      || '').trim();
+    const qtd = (l.estoque !== undefined && l.estoque !== '') ? (parseInt(parseNumeroBR(l.estoque)) || 0) : 0;
+
+    if (cor)      { if (!prod.cores.some(c => c.nome.toLowerCase() === cor.toLowerCase())) prod.cores.push({ nome: cor, hex: corParaHex(cor, l.hex) }); }
+    if (tamanho)  { if (!prod.tamanhos.includes(tamanho)) prod.tamanhos.push(tamanho); }
+    if (numeracao){ if (!prod.numeracoes.includes(numeracao)) prod.numeracoes.push(numeracao); }
+
+    // Mesma combinação repetida na planilha: soma as quantidades
+    const igual = prod.variacoes.find(v => v.cor === cor && v.tamanho === tamanho && v.numeracao === numeracao);
+    if (igual) igual.estoque += qtd;
+    else prod.variacoes.push({ cor, tamanho, numeracao, estoque: qtd });
+  });
+
+  // Fecha cada produto: soma o estoque e valida
+  return [...porNome.values()].map(prod => {
+    if (!prod._linhas) return prod; // linha com erro de nome
+    prod.estoque = prod.variacoes.reduce((s, v) => s + (Number(v.estoque) || 0), 0);
+
+    // Se nenhuma linha trouxe cor/tamanho/numeração, não há grade de verdade:
+    // vira um produto de estoque simples.
+    const semGrade = !prod.cores.length && !prod.tamanhos.length && !prod.numeracoes.length;
+    if (semGrade) prod.variacoes = [];
+
+    const erros = [];
+    if (prod.preco === null) erros.push('preço inválido ou não informado');
+    if (!prod.categoria) erros.push('categoria vazia');
+    if (prod.precoAtacado !== null && (isNaN(prod.precoAtacado) || (prod.preco !== null && prod.precoAtacado >= prod.preco))) {
+      erros.push('atacado deve ser menor que o varejo');
+    }
+    if (prod.estoque === 0) erros.push('todas as quantidades estão zeradas');
+    prod.erros = erros;
+    prod.valido = erros.length === 0;
+    return prod;
+  });
+}
+
 function lerPlanilhaImportacao(input) {
   const file = input.files[0];
   if (!file) return;
@@ -4926,29 +5140,9 @@ function lerPlanilhaImportacao(input) {
         return;
       }
 
-      importLinhas = linhasRaw.map((linhaObj, idx) => {
-        const l = mapearLinha(linhaObj);
-        const nome = String(l.nome || '').trim();
-        const descricao = String(l.descricao || '').trim();
-        const preco = parseNumeroBR(l.preco);
-        const precoAtacado = (l.precoAtacado !== undefined && l.precoAtacado !== '') ? parseNumeroBR(l.precoAtacado) : null;
-        const estoque = l.estoque !== undefined && l.estoque !== '' ? (parseInt(parseNumeroBR(l.estoque)) || 0) : 0;
-        const custo = (l.custo !== undefined && l.custo !== '') ? (parseNumeroBR(l.custo) || 0) : 0;
-        const categoria = String(l.categoria || '').trim();
-
-        const erros = [];
-        if (!nome) erros.push('nome vazio');
-        if (preco === null) erros.push('preço inválido');
-        if (!categoria) erros.push('categoria vazia');
-        if (precoAtacado !== null && (isNaN(precoAtacado) || (preco !== null && precoAtacado >= preco))) erros.push('atacado deve ser menor que o varejo');
-
-        return {
-          linha: idx + 2, // +2 pois linha 1 é cabeçalho na planilha original
-          nome, descricao, preco, precoAtacado, custo, estoque, categoria,
-          valido: erros.length === 0,
-          erros
-        };
-      });
+      importLinhas = (importModo === 'grade')
+        ? montarLinhasGrade(linhasRaw)
+        : montarLinhasSimples(linhasRaw);
 
       document.getElementById('import-file-label').textContent = '📄 ' + file.name;
       document.getElementById('import-fotos-box').style.display = 'block';
@@ -5077,7 +5271,10 @@ function renderPreviewImportacao() {
              <img src="${l.imagemBase64}" style="width:38px;height:38px;border-radius:6px;object-fit:cover">
              ${(l.imagensBase64 || []).length > 1 ? `<span style="position:absolute;bottom:-3px;right:-6px;background:var(--primary);color:#fff;font-size:.6rem;font-weight:800;padding:1px 5px;border-radius:9px;">${l.imagensBase64.length}</span>` : ''}
            </div>` : '<span style="color:var(--text-muted);font-size:.75rem">—</span>'}</td>
-      <td>${l.nome || '<em style="color:var(--text-muted)">—</em>'}</td>
+      <td>${l.nome || '<em style="color:var(--text-muted)">—</em>'}${
+        (l.variacoes && l.variacoes.length)
+          ? `<div style="font-size:.72rem;color:var(--text-muted);margin-top:2px">${l.variacoes.length} variação(ões) · ${l.cores.map(c => c.nome).join(', ') || 'sem cor'}${l.tamanhos.length ? ' · ' + l.tamanhos.join('/') : ''}${l.numeracoes.length ? ' · nº ' + l.numeracoes.join('/') : ''}</div>`
+          : ''}</td>
       <td>${l.preco !== null ? fmt(l.preco) : '—'}</td>
       <td>${l.precoAtacado !== null && l.precoAtacado !== undefined ? fmt(l.precoAtacado) : '—'}</td>
       <td>${l.estoque}</td>
@@ -5126,6 +5323,10 @@ async function confirmarImportacao() {
           custo: l.custo || 0,
           estoque: l.estoque,
           categoria: l.categoria,
+          cores: l.cores || [],
+          tamanhos: l.tamanhos || [],
+          numeracoes: l.numeracoes || [],
+          variacoes: l.variacoes || [],
           imagens: imgs, capa: 0, imagem: imgs[0] || '',
           ativo: true,
           criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
@@ -5242,6 +5443,7 @@ document.getElementById('logo-login').src = LOGO_B64;
 document.getElementById('favicon').href = LOGO_B64;
 
 /* ==================== INIT ==================== */
+document.getElementById('import-colunas-txt').innerHTML = COLUNAS_TXT[importModo];
 renderTamanhosAdmin();
 renderNumeracoesAdmin();
 renderGradeEstoque();
