@@ -100,7 +100,8 @@
     width: 232px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--border);
     padding: 1.1rem .8rem; position: fixed; top: var(--topbar-h); left: 0; height: calc(100vh - var(--topbar-h)); overflow-y: auto; z-index: 200;
   }
-  .side-title { font-size: .68rem; font-weight: 800; color: var(--text-muted); letter-spacing: .8px; text-transform: uppercase; padding: 0 .6rem; margin: .9rem 0 .45rem; }
+  .side-title { font-size: .68rem; font-weight: 800; color: var(--text-muted); letter-spacing: .8px; text-transform: uppercase; padding: 0 .6rem; margin: 1.1rem 0 .5rem; display: flex; align-items: center; gap: .5rem; }
+  .side-title::after { content: ''; flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--electric), transparent); }
   .side-btn {
     width: 100%; display: flex; align-items: center; gap: .65rem; padding: .68rem .75rem; margin-bottom: .25rem;
     background: none; border: none; border-radius: 9px; cursor: pointer; font-family: inherit;
@@ -108,8 +109,10 @@
   }
   .side-btn:hover { background: #FBF3DE; color: var(--primary); }
   .side-btn.active { background: var(--primary); color: #fff; }
-  .side-btn .s-ico { font-size: .95rem; width: 20px; text-align: center; filter: grayscale(1) contrast(1.1); opacity: .8; }
-  .side-btn.active .s-ico { filter: grayscale(1) brightness(3); opacity: .95; }
+  .side-btn .s-ico { width: 20px; height: 20px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--primary); transition: color .18s, transform .18s; }
+  .side-btn .s-ico svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .side-btn:hover .s-ico { color: var(--electric); transform: translateX(1px); }
+  .side-btn.active .s-ico { color: var(--electric); }
   .side-badge { margin-left: auto; background: var(--danger); color: #fff; border-radius: 20px; font-size: .68rem; font-weight: 800; padding: 1px 7px; }
   .main-area { flex: 1; min-width: 0; margin-left: 232px; }
 
@@ -140,8 +143,9 @@
       color: var(--text-muted); position: relative;
     }
     .bottom-nav button.active { color: var(--primary); }
-    .bottom-nav .bn-ico { font-size: 1.1rem; filter: grayscale(1); opacity: .75; }
-    .bottom-nav button.active .bn-ico { opacity: 1; }
+    .bottom-nav .bn-ico { display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); transition: color .18s; }
+    .bottom-nav .bn-ico svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    .bottom-nav button.active .bn-ico { color: var(--electric); }
     .bottom-nav .side-badge { position: absolute; top: 2px; right: 22%; margin: 0; }
     body { padding-bottom: 62px; }
   }
@@ -658,8 +662,8 @@
 <div class="app-shell">
   <aside class="sidebar">
     <div class="side-title">Navegação</div>
-    <button class="side-btn active" data-tab="loja" onclick="switchTab('loja')"><span class="s-ico">🏠</span> Catálogo</button>
-    <button class="side-btn" data-tab="carrinho" onclick="switchTab('carrinho')"><span class="s-ico">🛒</span> Carrinho <span class="side-badge" id="side-cart-badge" style="display:none">0</span></button>
+    <button class="side-btn active" data-tab="loja" onclick="switchTab('loja')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M12 8.2a2.3 2.3 0 1 1 2.3-2.3"/><path d="M12 8.2v2.4"/><path d="M3.6 17.4 12 10.6l8.4 6.8a1 1 0 0 1-.63 1.78H4.23a1 1 0 0 1-.63-1.78Z"/></svg></span> Catálogo</button>
+    <button class="side-btn" data-tab="carrinho" onclick="switchTab('carrinho')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M5.2 7.2h13.6l1.1 12a1.2 1.2 0 0 1-1.2 1.3H5.3a1.2 1.2 0 0 1-1.2-1.3l1.1-12Z"/><path d="M8.7 10.2V6.6a3.3 3.3 0 0 1 6.6 0v3.6"/></svg></span> Carrinho <span class="side-badge" id="side-cart-badge" style="display:none">0</span></button>
 
     <div class="side-title">Filtros</div>
     <div class="side-filtros">
@@ -692,11 +696,11 @@
     </div>
 
     <div class="side-title">Minha Conta</div>
-    <button class="side-btn" data-tab="meuspedidos" onclick="switchTab('meuspedidos')"><span class="s-ico">📋</span> Meus Pedidos</button>
-    <button class="side-btn" data-tab="favoritos" onclick="switchTab('favoritos')"><span class="s-ico">❤️</span> Favoritos <span class="side-badge" id="side-fav-badge" style="display:none">0</span></button>
+    <button class="side-btn" data-tab="meuspedidos" onclick="switchTab('meuspedidos')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M9.2 3.8h5.6a1 1 0 0 1 1 1v1.1H8.2V4.8a1 1 0 0 1 1-1Z"/><path d="M8.2 5.9H6.6a1.6 1.6 0 0 0-1.6 1.6v11.9a1.6 1.6 0 0 0 1.6 1.6h10.8a1.6 1.6 0 0 0 1.6-1.6V7.5a1.6 1.6 0 0 0-1.6-1.6h-1.6"/><path d="M8.6 11h6.8M8.6 14.4h6.8M8.6 17.8h4"/></svg></span> Meus Pedidos</button>
+    <button class="side-btn" data-tab="favoritos" onclick="switchTab('favoritos')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M12 20.1s-7.6-4.7-7.6-9.8a4.5 4.5 0 0 1 7.6-2.9 4.5 4.5 0 0 1 7.6 2.9c0 5.1-7.6 9.8-7.6 9.8Z"/></svg></span> Favoritos <span class="side-badge" id="side-fav-badge" style="display:none">0</span></button>
 
     <div class="side-title">Loja</div>
-    <button class="side-btn" data-tab="admin" onclick="switchTab('admin')"><span class="s-ico">🔐</span> Área do Vendedor</button>
+    <button class="side-btn" data-tab="admin" onclick="switchTab('admin')"><span class="s-ico"><svg viewBox="0 0 24 24"><rect x="4.6" y="10.4" width="14.8" height="9.6" rx="1.7"/><path d="M8.1 10.4V7.7a3.9 3.9 0 0 1 7.8 0v2.7"/><path d="M12 14.3v2"/></svg></span> Área do Vendedor</button>
   </aside>
 
   <div class="main-area">
@@ -1247,11 +1251,11 @@
 </div><!-- /app-shell -->
 
 <nav class="bottom-nav">
-  <button class="active" data-tab="loja" onclick="switchTab('loja')"><span class="bn-ico">🏠</span>Catálogo</button>
-  <button data-tab="carrinho" onclick="switchTab('carrinho')"><span class="bn-ico">🛒</span>Carrinho<span class="side-badge" id="bn-cart-badge" style="display:none">0</span></button>
-  <button data-tab="meuspedidos" onclick="switchTab('meuspedidos')"><span class="bn-ico">📋</span>Pedidos</button>
-  <button data-tab="favoritos" onclick="switchTab('favoritos')"><span class="bn-ico">❤️</span>Favoritos</button>
-  <button data-tab="admin" onclick="switchTab('admin')"><span class="bn-ico">🔐</span>Vendedor</button>
+  <button class="active" data-tab="loja" onclick="switchTab('loja')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M12 8.2a2.3 2.3 0 1 1 2.3-2.3"/><path d="M12 8.2v2.4"/><path d="M3.6 17.4 12 10.6l8.4 6.8a1 1 0 0 1-.63 1.78H4.23a1 1 0 0 1-.63-1.78Z"/></svg></span>Catálogo</button>
+  <button data-tab="carrinho" onclick="switchTab('carrinho')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M5.2 7.2h13.6l1.1 12a1.2 1.2 0 0 1-1.2 1.3H5.3a1.2 1.2 0 0 1-1.2-1.3l1.1-12Z"/><path d="M8.7 10.2V6.6a3.3 3.3 0 0 1 6.6 0v3.6"/></svg></span>Carrinho<span class="side-badge" id="bn-cart-badge" style="display:none">0</span></button>
+  <button data-tab="meuspedidos" onclick="switchTab('meuspedidos')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M9.2 3.8h5.6a1 1 0 0 1 1 1v1.1H8.2V4.8a1 1 0 0 1 1-1Z"/><path d="M8.2 5.9H6.6a1.6 1.6 0 0 0-1.6 1.6v11.9a1.6 1.6 0 0 0 1.6 1.6h10.8a1.6 1.6 0 0 0 1.6-1.6V7.5a1.6 1.6 0 0 0-1.6-1.6h-1.6"/><path d="M8.6 11h6.8M8.6 14.4h6.8M8.6 17.8h4"/></svg></span>Pedidos</button>
+  <button data-tab="favoritos" onclick="switchTab('favoritos')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M12 20.1s-7.6-4.7-7.6-9.8a4.5 4.5 0 0 1 7.6-2.9 4.5 4.5 0 0 1 7.6 2.9c0 5.1-7.6 9.8-7.6 9.8Z"/></svg></span>Favoritos</button>
+  <button data-tab="admin" onclick="switchTab('admin')"><span class="bn-ico"><svg viewBox="0 0 24 24"><rect x="4.6" y="10.4" width="14.8" height="9.6" rx="1.7"/><path d="M8.1 10.4V7.7a3.9 3.9 0 0 1 7.8 0v2.7"/><path d="M12 14.3v2"/></svg></span>Vendedor</button>
 </nav>
 
 <!-- ===== MODAL DE DETALHES DO PRODUTO ===== -->
