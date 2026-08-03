@@ -695,6 +695,52 @@
 
   .admin-tabs { display:flex; gap:8px; margin-bottom:1.2rem; flex-wrap:wrap; }
   /* Sub-abas de Produtos: Estoque | Cadastrar */
+  /* No PDV a tela fica limpa: sem pílulas de categoria e sem busca do catálogo */
+  body.modo-pdv .cat-nav,
+  body.modo-pdv .topbar-search,
+  body.modo-pdv .side-filtros,
+  body.modo-pdv .side-title.filtros-titulo { display:none !important; }
+
+  /* ===== PDV — venda presencial ===== */
+  .pdv-topo { display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+  .pdv-titulo { font-family:var(--fonte-display); font-weight:400; text-transform:uppercase; letter-spacing:.01em;
+                font-size:2rem; color:var(--marca-txt); line-height:1; }
+  .pdv-sub { font-size:.82rem; color:var(--text-muted); margin-top:4px; }
+  .pdv-grid { display:grid; grid-template-columns:1.25fr .9fr; gap:1.2rem; align-items:start; }
+  @media (max-width:900px) { .pdv-grid { grid-template-columns:1fr; } }
+
+  .pdv-resultados { display:flex; flex-direction:column; gap:.5rem; max-height:62vh; overflow-y:auto; }
+  .pdv-res { display:flex; gap:.7rem; align-items:center; padding:.55rem .65rem; border:1px solid var(--border);
+             border-radius:10px; background:var(--surf-2); }
+  .pdv-res img { width:44px; height:56px; object-fit:cover; border-radius:7px; flex-shrink:0; }
+  .pdv-res-info { flex:1; min-width:0; }
+  .pdv-res-nome { font-weight:700; font-size:.88rem; line-height:1.25; overflow-wrap:anywhere; }
+  .pdv-res-meta { font-size:.75rem; color:var(--text-muted); }
+  .pdv-res-preco { font-weight:800; color:var(--marca-txt); white-space:nowrap; font-size:.95rem; }
+  .pdv-var { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+  .pdv-vbtn { border:1.5px solid var(--border); background:var(--card); border-radius:7px; cursor:pointer;
+              font-family:inherit; font-size:.74rem; font-weight:700; color:var(--text); padding:4px 9px; display:flex; align-items:center; gap:5px; }
+  .pdv-vbtn:hover { border-color:var(--primary); }
+  .pdv-vbtn:disabled { opacity:.35; cursor:not-allowed; text-decoration:line-through; }
+  .pdv-vbtn i { width:11px; height:11px; border-radius:50%; box-shadow:0 0 0 1px var(--border); display:inline-block; }
+  .pdv-vqtd { font-size:.68rem; color:var(--text-muted); font-weight:700; }
+
+  .pdv-itens { display:flex; flex-direction:column; gap:.45rem; max-height:34vh; overflow-y:auto; margin-bottom:.8rem; }
+  .pdv-item { display:flex; gap:.55rem; align-items:center; font-size:.84rem; border-bottom:1px solid var(--border); padding-bottom:.45rem; }
+  .pdv-item-nome { flex:1; min-width:0; }
+  .pdv-item-nome small { display:block; color:var(--text-muted); font-weight:700; font-size:.72rem; }
+  .pdv-item-tot { font-weight:800; white-space:nowrap; }
+  .pdv-vazio { text-align:center; color:var(--text-muted); font-size:.85rem; padding:1.4rem .5rem; }
+
+  .pdv-linha { display:flex; justify-content:space-between; align-items:center; font-size:.9rem; padding:.35rem 0; }
+  .pdv-linha.total { font-size:1.35rem; font-weight:800; color:var(--marca-txt); border-top:2px solid var(--border);
+                     padding-top:.6rem; margin-top:.3rem; }
+  .pdv-pags { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .pdv-pag { padding:.55rem; border:1.5px solid var(--border); border-radius:9px; background:var(--card); cursor:pointer;
+             font-family:inherit; font-weight:700; font-size:.84rem; color:var(--text-muted); transition:all .15s; }
+  .pdv-pag:hover { border-color:var(--primary-light); }
+  .pdv-pag.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+
   .prod-sub { display:flex; gap:.5rem; margin-bottom:1.1rem; flex-wrap:wrap; }
   .prod-sub-btn {
     padding:.6rem 1.3rem; border-radius:10px; border:1.5px solid var(--border); background:var(--card);
@@ -848,7 +894,7 @@
     <button class="side-btn active" data-tab="loja" onclick="switchTab('loja')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M12 8.2a2.3 2.3 0 1 1 2.3-2.3"/><path d="M12 8.2v2.4"/><path d="M3.6 17.4 12 10.6l8.4 6.8a1 1 0 0 1-.63 1.78H4.23a1 1 0 0 1-.63-1.78Z"/></svg></span> Catálogo</button>
     <button class="side-btn" data-tab="carrinho" onclick="switchTab('carrinho')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M5.2 7.2h13.6l1.1 12a1.2 1.2 0 0 1-1.2 1.3H5.3a1.2 1.2 0 0 1-1.2-1.3l1.1-12Z"/><path d="M8.7 10.2V6.6a3.3 3.3 0 0 1 6.6 0v3.6"/></svg></span> Carrinho <span class="side-badge" id="side-cart-badge" style="display:none">0</span></button>
 
-    <div class="side-title">Filtros</div>
+    <div class="side-title filtros-titulo">Filtros</div>
     <div class="side-filtros">
       <div class="sf-group">
         <label>Categoria</label>
@@ -1113,6 +1159,7 @@
         <button class="admin-tab" data-aview="pedidos" onclick="adminView('pedidos')">📋 Pedidos <span id="ped-badge" style="display:none; background:var(--danger); color:#fff; border-radius:20px; padding:1px 8px; font-size:.72rem; margin-left:4px;">0</span></button>
         <button class="admin-tab" data-aview="config" onclick="adminView('config')">⚙️ Configurações</button>
         <button class="admin-tab" data-aview="clientes" onclick="adminView('clientes')">👥 Administração</button>
+        <button class="admin-tab" style="background:var(--accent); color:#fff; border-color:var(--accent);" onclick="switchTab('pdv')">🏪 Venda na Loja</button>
       </div>
 
       <div id="aview-dashboard">
@@ -1477,6 +1524,67 @@
   </div>
 </div>
 
+  <!-- ===== PDV — VENDA PRESENCIAL NA LOJA ===== -->
+  <div id="pdv" class="section">
+    <div class="pdv-topo">
+      <div>
+        <h2 class="pdv-titulo">Venda na Loja</h2>
+        <p class="pdv-sub" id="pdv-hora"></p>
+      </div>
+      <button class="btn-clear" onclick="switchTab('admin')">← Voltar ao painel</button>
+    </div>
+
+    <div class="pdv-grid">
+      <!-- Coluna 1: busca e escolha do produto -->
+      <div class="panel pdv-busca-col">
+        <div class="field" style="margin-bottom:.8rem">
+          <label>Buscar produto</label>
+          <input type="text" id="pdv-busca" placeholder="Nome ou categoria — comece a digitar" oninput="pdvBuscar()" autocomplete="off">
+        </div>
+        <div id="pdv-resultados" class="pdv-resultados"></div>
+      </div>
+
+      <!-- Coluna 2: cupom da venda -->
+      <div class="panel pdv-cupom">
+        <h3 style="margin-bottom:.7rem">Itens da venda <span id="pdv-qtd-itens" style="font-size:.8rem;color:var(--text-muted);font-weight:400"></span></h3>
+        <div id="pdv-itens" class="pdv-itens"></div>
+
+        <div class="pdv-linha"><span>Subtotal</span><strong id="pdv-subtotal">R$ 0,00</strong></div>
+
+        <div class="field" style="margin:.7rem 0 .4rem">
+          <label>Desconto (R$)</label>
+          <input type="number" id="pdv-desconto" min="0" step="0.01" value="0" oninput="pdvAtualizar()">
+        </div>
+
+        <div class="pdv-linha total"><span>Total</span><strong id="pdv-total">R$ 0,00</strong></div>
+
+        <div class="field" style="margin-top:.9rem">
+          <label>Forma de pagamento</label>
+          <div class="pdv-pags" id="pdv-pags">
+            <button class="pdv-pag active" data-pag="Dinheiro" onclick="pdvPagamento('Dinheiro')">Dinheiro</button>
+            <button class="pdv-pag" data-pag="Pix" onclick="pdvPagamento('Pix')">Pix</button>
+            <button class="pdv-pag" data-pag="Débito" onclick="pdvPagamento('Débito')">Débito</button>
+            <button class="pdv-pag" data-pag="Crédito" onclick="pdvPagamento('Crédito')">Crédito</button>
+          </div>
+        </div>
+
+        <div id="pdv-dinheiro-box" class="field" style="margin-top:.7rem">
+          <label>Valor recebido (R$)</label>
+          <input type="number" id="pdv-recebido" min="0" step="0.01" placeholder="0,00" oninput="pdvAtualizar()">
+          <p id="pdv-troco" style="font-size:.9rem;font-weight:800;margin-top:6px"></p>
+        </div>
+
+        <div class="field" style="margin-top:.4rem">
+          <label>Cliente (opcional)</label>
+          <input type="text" id="pdv-cliente" placeholder="Nome de quem comprou">
+        </div>
+
+        <button class="btn-block btn-pdf" id="pdv-finalizar" onclick="pdvFinalizar()" disabled>Finalizar venda</button>
+        <button class="btn-block btn-ghost" onclick="pdvLimpar()">Cancelar venda</button>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /main-area -->
 </div><!-- /app-shell -->
 
@@ -1630,9 +1738,13 @@ function switchTab(tab) {
   const alvo = document.getElementById(tab);
   if (alvo) alvo.classList.add('active');
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  // O PDV é tela de operação: esconde a barra de categorias e a busca da loja,
+  // que só servem para quem está comprando pelo site.
+  document.body.classList.toggle('modo-pdv', tab === 'pdv');
   if (tab === 'carrinho') renderCarrinho();
   if (tab === 'meuspedidos') renderMeusPedidos();
   if (tab === 'favoritos') renderFavoritos();
+  if (tab === 'pdv') pdvAbrir();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1652,7 +1764,10 @@ function toast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-const fmt = v => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
+// Moeda no padrão brasileiro, com ponto no milhar: R$ 16.134,80
+const fmt = v => 'R$ ' + (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Só o número, sem o "R$" (usado em campos de digitação)
+const fmtNum = v => (Number(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 // Gera um literal JS de string (aspas simples) seguro para embutir dentro de um
 // atributo onclick="" (que usa aspas duplas). Usar JSON.stringify aqui quebraria
 // o atributo, porque ele devolve aspas duplas.
@@ -3709,6 +3824,236 @@ function produtoView(v) {
   if (v === 'estoque') renderAdminTable();
 }
 
+/* ==================== PDV — VENDA PRESENCIAL ==================== */
+/*
+ * Venda feita no balcão da loja física. Diferente do site, aqui o dinheiro já
+ * entrou e a peça já saiu na hora — então a venda é gravada como concluída e o
+ * estoque é debitado no mesmo momento, sem passar por aprovação.
+ */
+let pdvItens = [];          // [{id, nome, cor, tamanho, numeracao, preco, qtd}]
+let pdvFormaPag = 'Dinheiro';
+
+function pdvAbrir() {
+  document.getElementById('pdv-hora').textContent =
+    new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  document.getElementById('pdv-busca').value = '';
+  pdvBuscar();
+  pdvAtualizar();
+  setTimeout(() => { const b = document.getElementById('pdv-busca'); if (b) b.focus(); }, 120);
+}
+
+/* ---------- Busca ---------- */
+function pdvBuscar() {
+  const termo = (document.getElementById('pdv-busca').value || '').toLowerCase().trim();
+  const alvo = document.getElementById('pdv-resultados');
+  let lista = produtos.filter(p => p.ativo !== false);
+  if (termo) {
+    lista = lista.filter(p => p.nome.toLowerCase().includes(termo) ||
+                              (p.categoria || '').toLowerCase().includes(termo));
+  }
+  lista = lista.sort((a, b) => a.nome.localeCompare(b.nome)).slice(0, 30);
+
+  if (!lista.length) {
+    alvo.innerHTML = '<div class="pdv-vazio">Nenhum produto encontrado.</div>';
+    return;
+  }
+  alvo.innerHTML = lista.map(p => {
+    const total = estoqueCombo(p, {});
+    return `
+    <div class="pdv-res">
+      ${getCapa(p) ? `<img src="${getCapa(p)}" alt="">` : ''}
+      <div class="pdv-res-info">
+        <div class="pdv-res-nome">${p.nome}</div>
+        <div class="pdv-res-meta">${p.categoria || '—'} · ${total} em estoque</div>
+        ${pdvVariacoesHTML(p)}
+      </div>
+      <div class="pdv-res-preco">${fmt(p.preco)}</div>
+    </div>`;
+  }).join('');
+}
+
+// Botões de variação: cada combinação disponível vira um botão que adiciona 1 un.
+function pdvVariacoesHTML(p) {
+  const temGrade = Array.isArray(p.variacoes) && p.variacoes.length;
+  if (!temGrade) {
+    const q = Number(p.estoque) || 0;
+    return `<div class="pdv-var"><button class="pdv-vbtn" ${q <= 0 ? 'disabled' : ''}
+      onclick="pdvAdicionar('${p.id}','','','')">+ Adicionar <span class="pdv-vqtd">(${q})</span></button></div>`;
+  }
+  const mapaHex = {};
+  (p.cores || []).forEach(c => { mapaHex[c.nome] = c.hex; });
+  return '<div class="pdv-var">' + p.variacoes.map(v => {
+    const q = Number(v.estoque) || 0;
+    const rot = [v.tamanho, v.numeracao].filter(Boolean).join('/') || (v.cor || 'único');
+    const bolinha = v.cor ? `<i style="background:${mapaHex[v.cor] || '#bbb'}" title="${v.cor}"></i>` : '';
+    return `<button class="pdv-vbtn" ${q <= 0 ? 'disabled' : ''} title="${[v.cor, v.tamanho, v.numeracao].filter(Boolean).join(' · ')}"
+      onclick="pdvAdicionar('${p.id}',${attrStr(v.cor || '')},${attrStr(v.tamanho || '')},${attrStr(v.numeracao || '')})">
+      ${bolinha}${rot} <span class="pdv-vqtd">(${q})</span></button>`;
+  }).join('') + '</div>';
+}
+
+/* ---------- Itens da venda ---------- */
+function pdvAdicionar(id, cor, tamanho, numeracao) {
+  const p = produtos.find(x => x.id === id);
+  if (!p) return;
+  const disponivel = estoqueCombo(p, { cor, tamanho, numeracao });
+  const jaTem = pdvItens.filter(i => i.id === id && i.cor === cor && i.tamanho === tamanho && i.numeracao === numeracao)
+                        .reduce((s, i) => s + i.qtd, 0);
+  if (jaTem + 1 > disponivel) return toast(`⚠️ Só há ${disponivel} em estoque dessa opção.`);
+
+  const existente = pdvItens.find(i => i.id === id && i.cor === cor && i.tamanho === tamanho && i.numeracao === numeracao);
+  if (existente) existente.qtd += 1;
+  else pdvItens.push({ id, nome: p.nome, cor, tamanho, numeracao, preco: Number(p.preco) || 0, qtd: 1 });
+  pdvAtualizar();
+}
+
+function pdvQtd(idx, delta) {
+  const it = pdvItens[idx];
+  if (!it) return;
+  if (delta > 0) {
+    const p = produtos.find(x => x.id === it.id);
+    const disponivel = p ? estoqueCombo(p, { cor: it.cor, tamanho: it.tamanho, numeracao: it.numeracao }) : 0;
+    if (it.qtd + delta > disponivel) return toast(`⚠️ Só há ${disponivel} em estoque dessa opção.`);
+  }
+  it.qtd += delta;
+  if (it.qtd <= 0) pdvItens.splice(idx, 1);
+  pdvAtualizar();
+}
+
+function pdvRemover(idx) { pdvItens.splice(idx, 1); pdvAtualizar(); }
+
+function pdvPagamento(forma) {
+  pdvFormaPag = forma;
+  document.querySelectorAll('.pdv-pag').forEach(b => b.classList.toggle('active', b.dataset.pag === forma));
+  document.getElementById('pdv-dinheiro-box').style.display = (forma === 'Dinheiro') ? '' : 'none';
+  pdvAtualizar();
+}
+
+function pdvSubtotal() { return pdvItens.reduce((s, i) => s + i.preco * i.qtd, 0); }
+
+function pdvAtualizar() {
+  const alvo = document.getElementById('pdv-itens');
+  if (!pdvItens.length) {
+    alvo.innerHTML = '<div class="pdv-vazio">Nenhum item. Busque o produto ao lado e toque na variação.</div>';
+  } else {
+    alvo.innerHTML = pdvItens.map((i, idx) => {
+      const v = [i.cor, i.tamanho, i.numeracao].filter(Boolean).join(' · ');
+      return `
+      <div class="pdv-item">
+        <span class="pdv-item-nome">${i.nome}${v ? `<small>${v}</small>` : ''}</span>
+        <span class="qty-box" style="display:inline-flex">
+          <button onclick="pdvQtd(${idx},-1)">−</button><span>${i.qtd}</span><button onclick="pdvQtd(${idx},1)">+</button>
+        </span>
+        <span class="pdv-item-tot">${fmt(i.preco * i.qtd)}</span>
+        <button class="btn-remove" onclick="pdvRemover(${idx})" title="Remover">🗑</button>
+      </div>`;
+    }).join('');
+  }
+
+  const sub = pdvSubtotal();
+  let desc = parseFloat(document.getElementById('pdv-desconto').value) || 0;
+  if (desc < 0) desc = 0;
+  if (desc > sub) desc = sub;
+  const total = sub - desc;
+
+  const nItens = pdvItens.reduce((s, i) => s + i.qtd, 0);
+  document.getElementById('pdv-qtd-itens').textContent = nItens ? `(${nItens} peça${nItens > 1 ? 's' : ''})` : '';
+  document.getElementById('pdv-subtotal').textContent = fmt(sub);
+  document.getElementById('pdv-total').textContent = fmt(total);
+
+  // Troco só faz sentido no dinheiro
+  const elTroco = document.getElementById('pdv-troco');
+  if (pdvFormaPag === 'Dinheiro') {
+    const recebido = parseFloat(document.getElementById('pdv-recebido').value) || 0;
+    if (recebido > 0 && total > 0) {
+      const troco = recebido - total;
+      elTroco.textContent = troco >= 0 ? `Troco: ${fmt(troco)}` : `Faltam ${fmt(-troco)}`;
+      elTroco.style.color = troco >= 0 ? 'var(--ok-txt)' : 'var(--danger)';
+    } else elTroco.textContent = '';
+  } else elTroco.textContent = '';
+
+  document.getElementById('pdv-finalizar').disabled = (nItens === 0);
+  document.getElementById('pdv-finalizar').textContent = nItens ? `Finalizar venda · ${fmt(total)}` : 'Finalizar venda';
+}
+
+function pdvLimpar() {
+  if (pdvItens.length && !confirm('Cancelar esta venda e limpar os itens?')) return;
+  pdvItens = [];
+  document.getElementById('pdv-desconto').value = 0;
+  document.getElementById('pdv-recebido').value = '';
+  document.getElementById('pdv-cliente').value = '';
+  pdvAtualizar();
+}
+
+/* ---------- Fechar a venda ---------- */
+async function pdvFinalizar() {
+  if (!pdvItens.length) return;
+  const sub = pdvSubtotal();
+  let desc = parseFloat(document.getElementById('pdv-desconto').value) || 0;
+  if (desc < 0) desc = 0;
+  if (desc > sub) desc = sub;
+  const total = sub - desc;
+  const cliente = (document.getElementById('pdv-cliente').value || '').trim() || 'Venda na loja';
+
+  const btn = document.getElementById('pdv-finalizar');
+  btn.disabled = true;
+  btn.textContent = 'Gravando...';
+
+  try {
+    const codigo = gerarCodigo();
+    const batch = db.batch();
+
+    // Baixa de estoque na combinação exata de cada item
+    for (const it of pdvItens) {
+      const prod = produtos.find(p => p.id === it.id);
+      if (!prod) continue;
+      const mov = movimentarEstoque(prod, it, -it.qtd);
+      delete mov._achou; delete mov._restante;
+      batch.update(db.collection('produtos').doc(it.id), mov);
+    }
+
+    const ref = db.collection('pedidos').doc();
+    batch.set(ref, {
+      codigo,
+      canal: 'loja',                 // separa a venda de balcão da venda pelo site
+      status: 'enviado',             // entregue na hora, não entra na fila de envio
+      cliente: { nome: cliente, fone: '', cpfCnpj: '' },
+      endereco: 'Retirada na loja',
+      itens: pdvItens.map(i => ({
+        id: i.id, nome: i.nome, preco: i.preco, qtd: i.qtd,
+        cor: i.cor || '', tamanho: i.tamanho || '', numeracao: i.numeracao || ''
+      })),
+      subtotal: Math.round(sub * 100) / 100,
+      desconto: Math.round(desc * 100) / 100,
+      total: Math.round(total * 100) / 100,
+      pagamento: { metodo: pdvFormaPag, status: 'RECEIVED', valor: Math.round(total * 100) / 100 },
+      criadoEm: firebase.firestore.FieldValue.serverTimestamp(),
+      pagoEm: firebase.firestore.FieldValue.serverTimestamp(),
+      aprovadoEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await batch.commit();
+
+    const recebido = parseFloat(document.getElementById('pdv-recebido').value) || 0;
+    const troco = (pdvFormaPag === 'Dinheiro' && recebido > total) ? recebido - total : 0;
+    toast(`✅ Venda ${codigo} registrada!` + (troco ? ` Troco: ${fmt(troco)}` : ''));
+
+    pdvItens = [];
+    document.getElementById('pdv-desconto').value = 0;
+    document.getElementById('pdv-recebido').value = '';
+    document.getElementById('pdv-cliente').value = '';
+    document.getElementById('pdv-busca').value = '';
+    pdvBuscar();
+    pdvAtualizar();
+    document.getElementById('pdv-busca').focus();
+  } catch (e) {
+    console.error(e);
+    toast('❌ Erro ao gravar a venda: ' + e.message);
+  } finally {
+    pdvAtualizar();
+  }
+}
+
 /* ==================== DASHBOARD ==================== */
 let dashPeriodo = 30; // dias; 0 = tudo
 let dashUltimo = null; // último cálculo feito, usado pela exportação
@@ -4313,7 +4658,7 @@ function renderPedidos() {
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
         <div>
           <strong style="font-size:1.05rem; color: var(--marca-txt)">${p.codigo}</strong>
-          <span class="status-badge st-${p.status}">${STATUS_LABEL[p.status] || p.status}</span>
+          <span class="status-badge st-${p.status}">${p.canal === 'loja' ? '🏪 Vendido na loja' : (STATUS_LABEL[p.status] || p.status)}</span>
         </div>
         <span style="font-size:.8rem; color:var(--text-muted)">${data}</span>
       </div>
