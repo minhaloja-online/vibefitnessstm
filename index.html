@@ -602,6 +602,11 @@
   .admin-table th { text-align: left; padding: 9px 8px; border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: .4px; }
   .admin-table td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   .admin-table img { width: 42px; height: 42px; border-radius: 8px; object-fit: cover; }
+  /* Coluna do nome fica com a maior fatia da largura e pode quebrar em 2 linhas */
+  .admin-table .col-nome { width: 38%; min-width: 190px; }
+  .admin-table .col-nome strong { display:block; line-height:1.3; overflow-wrap:anywhere; }
+  .admin-table .col-num { text-align: right; white-space: nowrap; }
+  .admin-table .col-acao { white-space: nowrap; text-align: right; }
   .mini-btn { border: none; border-radius: 7px; padding: 6px 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer; margin-right: 4px; }
   .mini-edit { background: var(--surf-3); color: var(--marca-txt); }
   .mini-del { background: #fdecea; color: var(--danger); }
@@ -649,9 +654,16 @@
   .dash-lista { display:flex; flex-direction:column; gap:.55rem; }
   .dash-li { display:flex; align-items:center; gap:.7rem; padding:.55rem .7rem; background:var(--bg); border-radius:10px; font-size:.85rem; }
   .dash-li img { width:34px; height:44px; object-fit:cover; border-radius:6px; flex-shrink:0; }
-  .dash-li .li-nome { flex:1; min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .dash-li .li-val { font-weight:800; color: var(--marca-txt); white-space:nowrap; }
-  .pill { font-size:.68rem; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+  /* Nome pode ocupar duas linhas: cortar no meio da palavra atrapalha mais que
+     ocupar um pouco mais de altura. */
+  .dash-li .li-nome { flex:1; min-width:0; font-weight:600; font-size:.82rem; line-height:1.3;
+                      overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+                      overflow-wrap:anywhere; }
+  .dash-li .li-val { font-weight:800; color: var(--marca-txt); white-space:nowrap; flex-shrink:0; }
+  .dash-li .li-txt { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .dash-li .li-txt .li-nome { flex:none; }
+  .dash-li .li-sub { font-size:.74rem; font-weight:700; color:var(--text-muted); }
+  .pill { font-size:.68rem; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap; flex-shrink:0; align-self:center; }
   .pill.crit { background:#fdeceb; color:#b3352a; }
   .pill.warn { background:var(--alerta-bg); color:var(--alerta-txt); }
   .pill.ok   { background:#e8f7ee; color:#1d7a46; }
@@ -682,6 +694,15 @@
                 border-radius:12px; padding:.8rem 1rem; font-size:.84rem; color:#7A5410; margin-bottom:1.2rem; }
 
   .admin-tabs { display:flex; gap:8px; margin-bottom:1.2rem; flex-wrap:wrap; }
+  /* Sub-abas de Produtos: Estoque | Cadastrar */
+  .prod-sub { display:flex; gap:.5rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+  .prod-sub-btn {
+    padding:.6rem 1.3rem; border-radius:10px; border:1.5px solid var(--border); background:var(--card);
+    cursor:pointer; font-family:inherit; font-weight:700; font-size:.9rem; color:var(--text-muted); transition:all .18s;
+  }
+  .prod-sub-btn:hover { border-color:var(--primary-light); color:var(--marca-txt); }
+  .prod-sub-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+
   .admin-tab { padding:.6rem 1.1rem; border-radius:8px; border:1px solid var(--border); background:var(--card); cursor:pointer; font-weight:700; font-size:.88rem; color:var(--text-muted); transition:all .2s; }
   .admin-tab:hover { border-color:var(--primary-light); color: var(--marca-txt); }
   .admin-tab.active { background:var(--primary); color:#fff; border-color: var(--marca-txt); }
@@ -1110,6 +1131,46 @@
       </div>
 
       <div id="aview-produtos" style="display:none">
+
+        <div class="prod-sub">
+          <button class="prod-sub-btn active" data-pview="estoque" onclick="produtoView('estoque')">📦 Estoque</button>
+          <button class="prod-sub-btn" data-pview="cadastrar" onclick="produtoView('cadastrar')">➕ Cadastrar</button>
+        </div>
+
+        <!-- ---- Estoque: tabela em largura total ---- -->
+        <div id="pview-estoque">
+        <div class="panel">
+          <h3>📦 Produtos Cadastrados <span id="prod-count" style="font-size:0.8rem;color:var(--text-muted)"></span></h3>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1rem;">
+            <div class="field" style="margin-bottom:0; flex:1; min-width:200px;">
+              <label>🔍 Buscar por nome ou categoria</label>
+              <input type="text" id="adm-prod-busca" placeholder="Digite para filtrar..." oninput="renderAdminTable()">
+            </div>
+            <div class="field" style="margin-bottom:0; min-width:170px;">
+              <label>Disponibilidade</label>
+              <select id="adm-prod-status" onchange="renderAdminTable()">
+                <option value="">Todos</option>
+                <option value="ativo">✅ Disponíveis</option>
+                <option value="inativo">⛔ Indisponíveis</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
+            <table class="admin-table">
+              <thead>
+                <tr><th style="width:56px"></th><th class="col-nome">Produto</th><th>Categoria</th><th class="col-num">Varejo</th><th class="col-num">Atacado (3+)</th><th class="col-num">Estoque</th><th>Disponível</th><th class="col-acao">Ações</th></tr>
+              </thead>
+              <tbody id="admin-tbody"></tbody>
+            </table>
+          </div>
+          <div id="admin-empty" class="empty-state" style="display:none; padding:2rem;">
+            <div class="icon">📦</div><p>Nenhum produto cadastrado ainda.</p>
+          </div>
+        </div>
+        </div>
+
+        <!-- ---- Cadastrar: importação em massa + formulário ---- -->
+        <div id="pview-cadastrar" style="display:none">
       <div class="panel" style="margin-bottom:1.2rem;">
         <h3>📥 Importar Produtos em Massa</h3>
 
@@ -1167,8 +1228,6 @@
         </div>
       </div>
 
-      <div class="admin-layout">
-        <div>
           <div class="panel" style="margin-bottom:1.2rem;">
             <h3 id="form-title">➕ Cadastrar Produto</h3>
             <div class="msg" id="prod-msg"></div>
@@ -1263,36 +1322,6 @@
           </div>
 
         </div>
-
-        <div class="panel">
-          <h3>📦 Produtos Cadastrados <span id="prod-count" style="font-size:0.8rem;color:var(--text-muted)"></span></h3>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1rem;">
-            <div class="field" style="margin-bottom:0; flex:1; min-width:200px;">
-              <label>🔍 Buscar por nome ou categoria</label>
-              <input type="text" id="adm-prod-busca" placeholder="Digite para filtrar..." oninput="renderAdminTable()">
-            </div>
-            <div class="field" style="margin-bottom:0; min-width:170px;">
-              <label>Disponibilidade</label>
-              <select id="adm-prod-status" onchange="renderAdminTable()">
-                <option value="">Todos</option>
-                <option value="ativo">✅ Disponíveis</option>
-                <option value="inativo">⛔ Indisponíveis</option>
-              </select>
-            </div>
-          </div>
-          <div style="overflow-x:auto; -webkit-overflow-scrolling:touch;">
-            <table class="admin-table">
-              <thead>
-                <tr><th></th><th>Produto</th><th>Categoria</th><th>Varejo</th><th>Atacado (3+)</th><th>Estoque</th><th>Disponível</th><th>Ações</th></tr>
-              </thead>
-              <tbody id="admin-tbody"></tbody>
-            </table>
-          </div>
-          <div id="admin-empty" class="empty-state" style="display:none; padding:2rem;">
-            <div class="icon">📦</div><p>Nenhum produto cadastrado ainda.</p>
-          </div>
-        </div>
-      </div>
       </div>
 
       <!-- ===== ABA CONFIGURAÇÕES ===== -->
@@ -3666,6 +3695,18 @@ function adminView(v) {
   if (v === 'config') { preencherFormTema(); preencherFormBanner(); }
   if (v === 'clientes') renderClientes();
   if (v === 'dashboard') renderDashboard();
+  // Produtos abre sempre no Estoque — é a tela do dia a dia
+  if (v === 'produtos') produtoView('estoque');
+}
+
+/* Sub-abas de Produtos: 'estoque' (tabela) e 'cadastrar' (importação + formulário) */
+function produtoView(v) {
+  ['estoque','cadastrar'].forEach(k => {
+    const el = document.getElementById('pview-' + k);
+    if (el) el.style.display = (v === k) ? '' : 'none';
+  });
+  document.querySelectorAll('.prod-sub-btn[data-pview]').forEach(b => b.classList.toggle('active', b.dataset.pview === v));
+  if (v === 'estoque') renderAdminTable();
 }
 
 /* ==================== DASHBOARD ==================== */
@@ -4173,7 +4214,10 @@ function renderDashboard() {
           ${baixos.slice(0, 8).map(b => `
             <div class="dash-li">
               ${getCapa(b.p) ? `<img src="${getCapa(b.p)}" alt="">` : ''}
-              <span class="li-nome">${b.p.nome}${b.variacao ? ` <span style="color:var(--text-muted);font-weight:600">· ${b.variacao}</span>` : ''}</span>
+              <span class="li-txt">
+                <span class="li-nome">${b.p.nome}</span>
+                ${b.variacao ? `<span class="li-sub">${b.variacao}</span>` : ''}
+              </span>
               <span class="pill warn">${b.total} restante(s)</span>
             </div>`).join('')}
         </div>` : '<div class="dash-vazio">✅ Nenhum produto em falta. Estoque saudável!</div>'}
@@ -4909,7 +4953,11 @@ function salvarProduto() {
 
   op.then(() => {
     msg.className = 'msg ok'; msg.textContent = id ? 'Produto atualizado!' : 'Produto cadastrado!';
+    const eraEdicao = !!id;
     cancelarEdicao();
+    // Editou: volta para a lista para conferir. Cadastrou novo: fica no
+    // formulário, que é o normal quando se cadastra vários seguidos.
+    if (eraEdicao) produtoView('estoque');
     toast('✅ Salvo com sucesso!');
   }).catch(e => {
     msg.className = 'msg err'; msg.textContent = 'Erro ao salvar: ' + e.message;
@@ -4943,6 +4991,7 @@ function editarProduto(id) {
   document.getElementById('form-title').textContent = '✏️ Editar Produto';
   document.getElementById('btn-salvar').textContent = 'Atualizar produto';
   document.getElementById('btn-cancelar').style.display = 'flex';
+  produtoView('cadastrar'); // o formulário fica na outra sub-aba
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -4965,6 +5014,7 @@ function cancelarEdicao() {
   document.getElementById('form-title').textContent = '➕ Cadastrar Produto';
   document.getElementById('btn-salvar').textContent = 'Salvar produto';
   document.getElementById('btn-cancelar').style.display = 'none';
+  const m = document.getElementById('prod-msg'); if (m) { m.className = 'msg'; m.textContent = ''; }
 }
 
 function excluirProduto(id) {
@@ -5520,15 +5570,17 @@ function renderAdminTable() {
     return `
     <tr>
       <td>${getCapa(p) ? `<img src="${getCapa(p)}">` : '📦'}</td>
-      <td><strong>${p.nome}</strong></td>
+      <td class="col-nome"><strong>${p.nome}</strong>${
+        (Array.isArray(p.variacoes) && p.variacoes.length)
+          ? `<span style="font-size:.72rem;color:var(--text-muted);font-weight:600">${p.variacoes.length} variação(ões)</span>` : ''}</td>
       <td>${p.categoria || '-'}</td>
-      <td>${fmt(p.preco)}</td>
-      <td>${(p.precoAtacado !== undefined && p.precoAtacado !== null) ? fmt(p.precoAtacado) : '<span style="color:var(--text-muted)">—</span>'}</td>
-      <td>${p.estoque ?? '-'}</td>
+      <td class="col-num">${fmt(p.preco)}</td>
+      <td class="col-num">${(p.precoAtacado !== undefined && p.precoAtacado !== null) ? fmt(p.precoAtacado) : '<span style="color:var(--text-muted)">—</span>'}</td>
+      <td class="col-num">${p.estoque ?? '-'}</td>
       <td>
         <button class="mini-btn" style="background:${ativo ? '#e8f7ee' : '#f1eae0'}; color:${ativo ? '#1d7a46' : '#8A7F6D'}" onclick="alternarAtivoProduto('${p.id}', ${ativo})" title="${ativo ? 'Clique para desativar a venda' : 'Clique para liberar a venda'}">${ativo ? '✅ Disponível' : '⛔ Indisponível'}</button>
       </td>
-      <td style="white-space:nowrap">
+      <td class="col-acao">
         <button class="mini-btn mini-edit" onclick="editarProduto('${p.id}')">Editar</button>
         <button class="mini-btn mini-del" onclick="excluirProduto('${p.id}')">Excluir</button>
       </td>
