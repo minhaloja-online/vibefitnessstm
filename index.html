@@ -1910,9 +1910,37 @@ const varTemp = {}; // seleção de cor/tamanho/numeração por produto, nos car
 /* ---------- Estoque por variação (lado do cliente) ---------- */
 // Soma o estoque das variações que batem com o filtro. Campo vazio no filtro = "qualquer".
 // Produto sem grade cadastrada cai no estoque simples.
+// Produto de duas peças: tem tamanho de blusa E numeração de calça/short
+const ehConjunto = p => Array.isArray(p.tamanhos) && p.tamanhos.length > 0 &&
+                        Array.isArray(p.numeracoes) && p.numeracoes.length > 0;
+
+// Soma o estoque de um dos lados do conjunto. lado 'tam' = blusa, 'num' = calça/short.
+function somaLado(p, filtro, lado) {
+  return (p.variacoes || []).filter(v => {
+    const t = v.tamanho || '', n = v.numeracao || '';
+    if (lado === 'tam' ? !t : !n) return false;                 // linha do outro lado
+    if (filtro.cor && (v.cor || '') !== filtro.cor) return false;
+    if (lado === 'tam' && filtro.tamanho && t !== filtro.tamanho) return false;
+    if (lado === 'num' && filtro.numeracao && n !== filtro.numeracao) return false;
+    return true;
+  }).reduce((s, v) => s + (Number(v.estoque) || 0), 0);
+}
+
 function estoqueCombo(p, filtro) {
   filtro = filtro || {};
   if (!Array.isArray(p.variacoes) || !p.variacoes.length) return Number(p.estoque) || 0;
+
+  // Conjunto: só existe conjunto para vender se houver blusa E short. O que dá
+  // para vender é o MENOR dos dois lados — 5 blusas com 2 shorts são 2 conjuntos.
+  if (ehConjunto(p)) {
+    const cores = (Array.isArray(p.cores) && p.cores.length) ? p.cores.map(c => c.nome) : [''];
+    const alvos = filtro.cor ? [filtro.cor] : cores;
+    return alvos.reduce((s, cor) => {
+      const f = { ...filtro, cor: cor || '' };
+      return s + Math.min(somaLado(p, f, 'tam'), somaLado(p, f, 'num'));
+    }, 0);
+  }
+
   return p.variacoes
     .filter(v =>
       (!filtro.cor || (v.cor || '') === filtro.cor) &&
@@ -3882,13 +3910,32 @@ function pdvVariacoesHTML(p) {
   }
   const mapaHex = {};
   (p.cores || []).forEach(c => { mapaHex[c.nome] = c.hex; });
+  const bola = cor => cor ? `<i style="background:${mapaHex[cor] || '#bbb'}" title="${cor}"></i>` : '';
+
+  // Conjunto: a venda é blusa + short juntos, então o botão precisa das duas
+  // escolhas. Monta os pares possíveis dentro de cada cor.
+  if (ehConjunto(p)) {
+    const blusas = p.variacoes.filter(v => v.tamanho && (Number(v.estoque) || 0) > 0);
+    const shorts = p.variacoes.filter(v => v.numeracao && (Number(v.estoque) || 0) > 0);
+    const botoes = [];
+    blusas.forEach(b => shorts.forEach(s => {
+      if ((b.cor || '') !== (s.cor || '')) return;                  // conjunto é da mesma cor
+      const q = Math.min(Number(b.estoque) || 0, Number(s.estoque) || 0);
+      if (q <= 0) return;
+      botoes.push(`<button class="pdv-vbtn" title="${[b.cor, 'Tam ' + b.tamanho, 'Nº ' + s.numeracao].filter(Boolean).join(' · ')}"
+        onclick="pdvAdicionar('${p.id}',${attrStr(b.cor || '')},${attrStr(b.tamanho)},${attrStr(s.numeracao)})">
+        ${bola(b.cor)}${b.tamanho}/${s.numeracao} <span class="pdv-vqtd">(${q})</span></button>`);
+    }));
+    return '<div class="pdv-var">' + (botoes.length ? botoes.join('')
+      : '<span class="pdv-vqtd">Sem conjunto completo em estoque</span>') + '</div>';
+  }
+
   return '<div class="pdv-var">' + p.variacoes.map(v => {
     const q = Number(v.estoque) || 0;
     const rot = [v.tamanho, v.numeracao].filter(Boolean).join('/') || (v.cor || 'único');
-    const bolinha = v.cor ? `<i style="background:${mapaHex[v.cor] || '#bbb'}" title="${v.cor}"></i>` : '';
     return `<button class="pdv-vbtn" ${q <= 0 ? 'disabled' : ''} title="${[v.cor, v.tamanho, v.numeracao].filter(Boolean).join(' · ')}"
       onclick="pdvAdicionar('${p.id}',${attrStr(v.cor || '')},${attrStr(v.tamanho || '')},${attrStr(v.numeracao || '')})">
-      ${bolinha}${rot} <span class="pdv-vqtd">(${q})</span></button>`;
+      ${bola(v.cor)}${rot} <span class="pdv-vqtd">(${q})</span></button>`;
   }).join('') + '</div>';
 }
 
@@ -4692,10 +4739,27 @@ function movimentarEstoque(prod, item, delta) {
   const cor = item.cor || '', tam = item.tamanho || '', num = item.numeracao || '';
   if (Array.isArray(prod.variacoes) && prod.variacoes.length) {
     const variacoes = prod.variacoes.map(v => ({ ...v }));
-    const alvo = variacoes.find(v => (v.cor || '') === cor && (v.tamanho || '') === tam && (v.numeracao || '') === num);
-    if (alvo) alvo.estoque = Math.max((Number(alvo.estoque) || 0) + delta, 0);
-    const total = variacoes.reduce((s, v) => s + (Number(v.estoque) || 0), 0);
-    return { variacoes, estoque: total, _achou: !!alvo, _restante: alvo ? alvo.estoque : null };
+    let achou = false;
+
+    if (ehConjunto(prod)) {
+      // Conjunto: dá baixa DUAS vezes — uma na blusa, outra na calça/short.
+      if (tam) {
+        const b = variacoes.find(v => (v.cor || '') === cor && (v.tamanho || '') === tam && !(v.numeracao || ''));
+        if (b) { b.estoque = Math.max((Number(b.estoque) || 0) + delta, 0); achou = true; }
+      }
+      if (num) {
+        const s = variacoes.find(v => (v.cor || '') === cor && (v.numeracao || '') === num && !(v.tamanho || ''));
+        if (s) { s.estoque = Math.max((Number(s.estoque) || 0) + delta, 0); achou = true; }
+      }
+    } else {
+      const alvo = variacoes.find(v => (v.cor || '') === cor && (v.tamanho || '') === tam && (v.numeracao || '') === num);
+      if (alvo) { alvo.estoque = Math.max((Number(alvo.estoque) || 0) + delta, 0); achou = true; }
+    }
+
+    // Total do produto: para conjunto é o nº de conjuntos completos, não a soma
+    // solta das peças.
+    const total = estoqueCombo({ ...prod, variacoes }, {});
+    return { variacoes, estoque: total, _achou: achou, _restante: null };
   }
   return { estoque: Math.max((Number(prod.estoque) || 0) + delta, 0), _achou: true, _restante: null };
 }
@@ -5143,12 +5207,42 @@ function rotuloVar(v) {
     .filter(Boolean).join(' · ') || 'Peça única';
 }
 
+// Cadastro atual é de conjunto (duas peças com estoque separado)?
+const conjuntoNoForm = () => tamanhosProd.length > 0 && numeracoesProd.length > 0;
+
+// Nº de conjuntos completos que a grade atual permite montar, por cor
+function conjuntosCompletos() {
+  const cores = coresProd.length ? coresProd.map(c => c.nome) : [''];
+  return cores.reduce((s, cor) => {
+    const blusas = variacoesProd.filter(v => (v.cor || '') === cor && v.tamanho)
+                                .reduce((a, v) => a + (Number(v.estoque) || 0), 0);
+    const shorts = variacoesProd.filter(v => (v.cor || '') === cor && v.numeracao)
+                                .reduce((a, v) => a + (Number(v.estoque) || 0), 0);
+    return s + Math.min(blusas, shorts);
+  }, 0);
+}
+
 // Produto cartesiano das opções marcadas. Dimensão sem nenhuma opção vira '' (não se aplica).
+/*
+ * Monta as combinações da grade.
+ *
+ * CONJUNTO (tem tamanho de blusa E numeração de calça/short): blusa e short são
+ * PEÇAS SEPARADAS, cada uma com o próprio estoque. Então a grade não é o
+ * cruzamento das duas — são dois blocos: cor x tamanho e cor x numeração.
+ * Vender um conjunto dá baixa em uma peça de cada bloco.
+ *
+ * Peça única (só tamanho, ou só numeração, ou só cor): cruzamento normal.
+ */
 function combosProduto() {
   const cores = coresProd.length ? coresProd.map(c => c.nome) : [''];
-  const tams  = tamanhosProd.length ? tamanhosProd : [''];
-  const nums  = numeracoesProd.length ? numeracoesProd : [''];
   const out = [];
+  if (tamanhosProd.length && numeracoesProd.length) {
+    cores.forEach(c => tamanhosProd.forEach(t => out.push({ cor: c, tamanho: t, numeracao: '' })));
+    cores.forEach(c => numeracoesProd.forEach(n => out.push({ cor: c, tamanho: '', numeracao: n })));
+    return out;
+  }
+  const tams = tamanhosProd.length ? tamanhosProd : [''];
+  const nums = numeracoesProd.length ? numeracoesProd : [''];
   cores.forEach(c => tams.forEach(t => nums.forEach(n => out.push({ cor: c, tamanho: t, numeracao: n }))));
   return out;
 }
@@ -5171,6 +5265,7 @@ function gerarGradeEstoque() {
 }
 
 function totalGrade() {
+  if (conjuntoNoForm()) return conjuntosCompletos();
   return variacoesProd.reduce((s, v) => s + (Number(v.estoque) || 0), 0);
 }
 
@@ -5187,26 +5282,53 @@ function renderGradeEstoque() {
     wrap.innerHTML = '<p style="font-size:.8rem;color:var(--text-muted);background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:12px;text-align:center;">Nenhuma variação. O produto usa o campo <strong>Estoque total</strong> lá em cima.</p>';
     return;
   }
-  wrap.innerHTML = `
-    <div style="max-height:320px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
-      <table style="width:100%; border-collapse:collapse; font-size:.85rem;">
-        <thead><tr style="background:var(--bg); position:sticky; top:0;">
-          <th style="text-align:left; padding:8px 10px;">Variação</th>
-          <th style="text-align:right; padding:8px 10px; width:100px;">Qtd.</th>
-        </tr></thead>
-        <tbody>
-          ${variacoesProd.map((v, i) => `
-            <tr style="border-top:1px solid var(--border);">
-              <td style="padding:6px 10px;">${rotuloVar(v)}</td>
-              <td style="padding:6px 10px; text-align:right;">
-                <input type="number" min="0" value="${Number(v.estoque) || 0}" onchange="setEstoqueVar(${i}, this.value)" oninput="setEstoqueVar(${i}, this.value)"
-                       style="width:80px; padding:5px 7px; border:1px solid var(--border); border-radius:6px; text-align:right; font-family:inherit;">
-              </td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    <p style="font-size:.82rem; font-weight:700; margin-top:8px; text-align:right;">Total: <span id="grade-total">${totalGrade()}</span> peças</p>`;
+
+  const linha = (v) => {
+    const i = variacoesProd.indexOf(v);
+    return `
+      <tr style="border-top:1px solid var(--border);">
+        <td style="padding:6px 10px;">${rotuloVar(v)}</td>
+        <td style="padding:6px 10px; text-align:right;">
+          <input type="number" min="0" value="${Number(v.estoque) || 0}" onchange="setEstoqueVar(${i}, this.value)" oninput="setEstoqueVar(${i}, this.value)"
+                 style="width:80px; padding:5px 7px; border:1px solid var(--border); border-radius:6px; text-align:right; font-family:inherit;">
+        </td>
+      </tr>`;
+  };
+
+  const tabela = (titulo, itens) => !itens.length ? '' : `
+    <div style="margin-bottom:.8rem;">
+      ${titulo ? `<p style="font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:5px;">${titulo}</p>` : ''}
+      <div style="max-height:280px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
+        <table style="width:100%; border-collapse:collapse; font-size:.85rem;">
+          <thead><tr style="background:var(--bg); position:sticky; top:0;">
+            <th style="text-align:left; padding:8px 10px;">Variação</th>
+            <th style="text-align:right; padding:8px 10px; width:100px;">Qtd.</th>
+          </tr></thead>
+          <tbody>${itens.map(linha).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  if (conjuntoNoForm()) {
+    // Conjunto: cada peça tem estoque próprio, então a grade vem em dois blocos.
+    const blusas = variacoesProd.filter(v => v.tamanho);
+    const shorts = variacoesProd.filter(v => v.numeracao);
+    wrap.innerHTML =
+      `<p style="font-size:.78rem;color:var(--text-muted);background:var(--alerta-bg);border-radius:8px;padding:8px 10px;margin-bottom:.7rem;">
+         👕👖 <strong>Conjunto:</strong> blusa e calça/short são peças separadas, cada uma com o próprio estoque.
+         Informe quantas peças você tem de cada uma. Vender um conjunto baixa uma peça de cada lado.
+       </p>` +
+      tabela('👕 Blusa / top — por cor e tamanho', blusas) +
+      tabela('👖 Calça / short — por cor e numeração', shorts) +
+      `<p style="font-size:.82rem; font-weight:700; margin-top:8px; text-align:right;">
+         Conjuntos completos: <span id="grade-total">${totalGrade()}</span></p>
+       <p style="font-size:.73rem;color:var(--text-muted);text-align:right;margin-top:2px;">
+         (limitado pelo lado que tiver menos peças, por cor)</p>`;
+    return;
+  }
+
+  wrap.innerHTML = tabela('', variacoesProd) +
+    `<p style="font-size:.82rem; font-weight:700; margin-top:8px; text-align:right;">Total: <span id="grade-total">${totalGrade()}</span> peças</p>`;
 }
 
 function adicionarImagens(input) {
@@ -5376,7 +5498,7 @@ let importModo = 'simples';
 
 const COLUNAS_TXT = {
   simples: 'Uma linha por produto. Colunas: <code>nome</code>, <code>descricao</code>, <code>categoria</code>, <code>quantidade</code>, <code>preco</code>, <code>precoAtacado</code>, <code>custo</code>.',
-  grade:   'Uma linha por variação — repita o <code>nome</code> em cada linha do mesmo produto. Colunas: <code>nome</code>, <code>descricao</code>, <code>categoria</code>, <code>tamanho</code>, <code>cor</code>, <code>quantidade</code>, <code>preco</code>, <code>precoAtacado</code>, <code>custo</code>. Opcional: <code>numeracao</code> (calça/short) e <code>hex</code> (cor exata em #RRGGBB).'
+  grade:   'Uma linha por variação — repita o <code>nome</code> em cada linha do mesmo produto. Colunas: <code>nome</code>, <code>descricao</code>, <code>categoria</code>, <code>tamanho</code>, <code>cor</code>, <code>quantidade</code>, <code>preco</code>, <code>precoAtacado</code>, <code>custo</code>. Opcional: <code>numeracao</code> (calça/short) e <code>hex</code> (cor exata em #RRGGBB).<br>👕👖 <strong>Conjunto:</strong> blusa e calça/short têm estoque próprio. Use linhas separadas — umas com <code>tamanho</code>, outras com <code>numeracao</code>.'
 };
 
 function mudarModoImport(modo) {
@@ -5449,9 +5571,10 @@ function modeloGrade() {
   const exemplos = [
     ['Conjunto Legging Preto', 'Conjunto top + legging em suplex.', 'Conjuntos', 'P', '', 'Preto', '', 4, 149.9, 129.9, 70],
     ['Conjunto Legging Preto', '', '', 'M', '', 'Preto', '', 6, '', '', ''],
-    ['Conjunto Legging Preto', '', '', 'G', '', 'Preto', '', 3, '', '', ''],
     ['Conjunto Legging Preto', '', '', 'P', '', 'Rosa', '', 5, '', '', ''],
-    ['Conjunto Legging Preto', '', '', 'M', '', 'Rosa', '', 2, '', '', ''],
+    ['Conjunto Legging Preto', '', '', '', '38', 'Preto', '', 7, '', '', ''],
+    ['Conjunto Legging Preto', '', '', '', '40', 'Preto', '', 3, '', '', ''],
+    ['Conjunto Legging Preto', '', '', '', '38', 'Rosa', '', 5, '', '', ''],
     ['Short Saia Branco', 'Short saia com short interno.', 'Shorts', '', '38', 'Branco', '', 5, 29.9, '', 14],
     ['Short Saia Branco', '', '', '', '40', 'Branco', '', 7, '', '', ''],
     ['Short Saia Branco', '', '', '', '38', 'Preto', '', 4, '', '', ''],
@@ -5465,6 +5588,8 @@ function modeloGrade() {
     ['categoria', 'SIM', 'Pode preencher só na primeira linha do produto.'],
     ['tamanho', 'depende', 'Tamanho da blusa/top: PP, P, M, G, GG. Deixe vazio se a peça não tem.'],
     ['numeracao', 'depende', 'Numeração da calça/short: 36, 38, 40... Deixe vazio se a peça não tem.'],
+    ['', '', 'CONJUNTO: blusa e calça/short têm estoque PRÓPRIO. Use linhas separadas — umas'],
+    ['', '', 'só com tamanho (as blusas) e outras só com numeracao (os shorts).'],
     ['cor', 'depende', 'Nome da cor. Deixe vazio se a peça não tem variação de cor.'],
     ['hex', 'não', 'Cor exata em #RRGGBB. Se vazio, o sistema reconhece pelo nome (preto, rosa, azul marinho...).'],
     ['quantidade', 'SIM', 'Quantas peças você tem DESSA combinação exata.'],
@@ -5629,16 +5754,31 @@ function montarLinhasGrade(linhasRaw) {
     if (tamanho)  { if (!prod.tamanhos.includes(tamanho)) prod.tamanhos.push(tamanho); }
     if (numeracao){ if (!prod.numeracoes.includes(numeracao)) prod.numeracoes.push(numeracao); }
 
-    // Mesma combinação repetida na planilha: soma as quantidades
-    const igual = prod.variacoes.find(v => v.cor === cor && v.tamanho === tamanho && v.numeracao === numeracao);
-    if (igual) igual.estoque += qtd;
-    else prod.variacoes.push({ cor, tamanho, numeracao, estoque: qtd });
+    // Soma a quantidade numa linha da grade (repetição na planilha acumula)
+    const somar = (cr, tm, nm, q) => {
+      const igual = prod.variacoes.find(v => v.cor === cr && v.tamanho === tm && v.numeracao === nm);
+      if (igual) igual.estoque += q;
+      else prod.variacoes.push({ cor: cr, tamanho: tm, numeracao: nm, estoque: q });
+    };
+
+    if (tamanho && numeracao) {
+      // Linha de CONJUNTO ("3 conjuntos P com short 38"). Como blusa e short têm
+      // estoque próprio, a quantidade entra nas duas peças: 3 blusas P e 3
+      // shorts 38. Linhas repetidas do mesmo tamanho somam corretamente.
+      somar(cor, tamanho, '', qtd);
+      somar(cor, '', numeracao, qtd);
+    } else {
+      somar(cor, tamanho, numeracao, qtd);
+    }
   });
 
   // Fecha cada produto: soma o estoque e valida
   return [...porNome.values()].map(prod => {
     if (!prod._linhas) return prod; // linha com erro de nome
-    prod.estoque = prod.variacoes.reduce((s, v) => s + (Number(v.estoque) || 0), 0);
+    // Conjunto: o total é o nº de conjuntos completos, não a soma das peças
+    prod.estoque = (prod.tamanhos.length && prod.numeracoes.length)
+      ? estoqueCombo(prod, {})
+      : prod.variacoes.reduce((s, v) => s + (Number(v.estoque) || 0), 0);
 
     // Se nenhuma linha trouxe cor/tamanho/numeração, não há grade de verdade:
     // vira um produto de estoque simples.

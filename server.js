@@ -209,9 +209,22 @@ app.post('/api/criar-preferencia', async (req, res) => {
       const variacaoTxt = [cor, tam, num].filter(Boolean).join(' / ');
       let disponivel;
       if (Array.isArray(prod.variacoes) && prod.variacoes.length) {
-        const alvo = prod.variacoes.find(v =>
-          (v.cor || '') === cor && (v.tamanho || '') === tam && (v.numeracao || '') === num);
-        disponivel = alvo ? Number(alvo.estoque) || 0 : 0;
+        const ehConj = Array.isArray(prod.tamanhos) && prod.tamanhos.length &&
+                       Array.isArray(prod.numeracoes) && prod.numeracoes.length;
+        if (ehConj) {
+          // Conjunto: dá para vender o menor lado — sem blusa ou sem short não
+          // existe conjunto.
+          const blusa = prod.variacoes.find(v =>
+            (v.cor || '') === cor && (v.tamanho || '') === tam && !(v.numeracao || ''));
+          const short = prod.variacoes.find(v =>
+            (v.cor || '') === cor && (v.numeracao || '') === num && !(v.tamanho || ''));
+          disponivel = Math.min(blusa ? Number(blusa.estoque) || 0 : 0,
+                                short ? Number(short.estoque) || 0 : 0);
+        } else {
+          const alvo = prod.variacoes.find(v =>
+            (v.cor || '') === cor && (v.tamanho || '') === tam && (v.numeracao || '') === num);
+          disponivel = alvo ? Number(alvo.estoque) || 0 : 0;
+        }
       } else {
         disponivel = Number(prod.estoque) || 0;
       }
@@ -397,14 +410,47 @@ app.post('/api/webhook', async (req, res) => {
         if (Array.isArray(prod.variacoes) && prod.variacoes.length) {
           const cor = item.cor || '', tam = item.tamanho || '', num = item.numeracao || '';
           const variacoes = prod.variacoes.map(v => ({ ...v }));
-          const alvo = variacoes.find(v =>
-            (v.cor || '') === cor && (v.tamanho || '') === tam && (v.numeracao || '') === num);
-          if (alvo) {
-            alvo.estoque = Math.max((Number(alvo.estoque) || 0) - qtd, 0);
+
+          // Conjunto (tem tamanho de blusa E numeração de calça/short): blusa e
+          // short são peças com estoque próprio, então a venda baixa uma de cada.
+          const ehConjunto = Array.isArray(prod.tamanhos) && prod.tamanhos.length &&
+                             Array.isArray(prod.numeracoes) && prod.numeracoes.length;
+
+          if (ehConjunto) {
+            const blusa = tam && variacoes.find(v =>
+              (v.cor || '') === cor && (v.tamanho || '') === tam && !(v.numeracao || ''));
+            const short = num && variacoes.find(v =>
+              (v.cor || '') === cor && (v.numeracao || '') === num && !(v.tamanho || ''));
+            if (blusa) blusa.estoque = Math.max((Number(blusa.estoque) || 0) - qtd, 0);
+            if (short) short.estoque = Math.max((Number(short.estoque) || 0) - qtd, 0);
+            if (!blusa && !short) {
+              console.warn(`Variação de conjunto não encontrada no produto ${item.id}: "${cor}|${tam}|${num}" — estoque não debitado`);
+            }
           } else {
-            console.warn(`Variação não encontrada no produto ${item.id}: "${cor}|${tam}|${num}" — estoque não debitado`);
+            const alvo = variacoes.find(v =>
+              (v.cor || '') === cor && (v.tamanho || '') === tam && (v.numeracao || '') === num);
+            if (alvo) {
+              alvo.estoque = Math.max((Number(alvo.estoque) || 0) - qtd, 0);
+            } else {
+              console.warn(`Variação não encontrada no produto ${item.id}: "${cor}|${tam}|${num}" — estoque não debitado`);
+            }
           }
-          const total = variacoes.reduce((s, v) => s + (Number(v.estoque) || 0), 0);
+
+          // Total do produto: para conjunto é o nº de conjuntos completos (o
+          // menor lado, por cor); para peça única, a soma da grade.
+          let total;
+          if (ehConjunto) {
+            const cores = (Array.isArray(prod.cores) && prod.cores.length) ? prod.cores.map(c => c.nome) : [''];
+            total = cores.reduce((s, c) => {
+              const blusas = variacoes.filter(v => (v.cor || '') === c && v.tamanho)
+                                      .reduce((a, v) => a + (Number(v.estoque) || 0), 0);
+              const shorts = variacoes.filter(v => (v.cor || '') === c && v.numeracao)
+                                      .reduce((a, v) => a + (Number(v.estoque) || 0), 0);
+              return s + Math.min(blusas, shorts);
+            }, 0);
+          } else {
+            total = variacoes.reduce((s, v) => s + (Number(v.estoque) || 0), 0);
+          }
           tx.update(refsProdutos[i], { variacoes, estoque: total });
         } else {
           const atual = Number(prod.estoque || 0);
@@ -440,6 +486,39 @@ app.get('/api/status', (req, res) => {
 });
 
 const PORTA = process.env.PORT || 3000;
+
+/*
+ * Confere a chave da Asaas assim que o servidor sobe, para o erro aparecer nos
+ * Logs do Render em vez de só na hora que a cliente tenta pagar.
+ * Não derruba o servidor: apenas avisa.
+ */
+async function conferirChaveAsaas() {
+  if (!ASAAS_API_KEY) return;
+  const sandboxURL = ASAAS_API_URL.includes('sandbox');
+  // Chaves de Sandbox da Asaas trazem "hmlg" (homologação) no meio do texto.
+  const chaveHmlg = ASAAS_API_KEY.includes('hmlg');
+
+  try {
+    const conta = await asaas('/myAccount');
+    console.log(`Asaas OK — conta: ${conta?.name || conta?.email || 'conectada'} (${sandboxURL ? 'sandbox' : 'produção'})`);
+  } catch (erro) {
+    console.error('----------------------------------------------------------');
+    console.error('CHAVE DA ASAAS RECUSADA:', erro.message);
+    console.error(`URL em uso: ${ASAAS_API_URL} (${sandboxURL ? 'SANDBOX' : 'PRODUÇÃO'})`);
+    console.error(`A chave começa com: ${ASAAS_API_KEY.slice(0, 12)}... e tem ${ASAAS_API_KEY.length} caracteres`);
+    if (sandboxURL && !chaveHmlg) {
+      console.error('>> A URL é de SANDBOX, mas a chave NÃO parece ser de sandbox.');
+      console.error('>> Gere a chave dentro de sandbox.asaas.com (conta separada da de produção).');
+    } else if (!sandboxURL && chaveHmlg) {
+      console.error('>> A chave é de SANDBOX, mas a URL é de PRODUÇÃO.');
+      console.error('>> Defina ASAAS_API_URL = https://api-sandbox.asaas.com/v3');
+    } else {
+      console.error('>> Confira se copiou a chave inteira, sem cortar o começo ou o fim.');
+    }
+    console.error('----------------------------------------------------------');
+  }
+}
+
 app.listen(PORTA, () => {
   console.log(`Servidor rodando na porta ${PORTA}`);
   console.log(`Asaas: usando ${ASAAS_API_URL}`);
@@ -449,5 +528,6 @@ app.listen(PORTA, () => {
   if (!process.env.ASAAS_API_KEY) console.warn('Falta ASAAS_API_KEY no .env');
   else if (process.env.ASAAS_API_KEY !== ASAAS_API_KEY) console.warn('ASAAS_API_KEY tinha espaço ou quebra de linha nas pontas — foi removido automaticamente, mas confira o valor no painel');
   if (!process.env.ASAAS_WEBHOOK_TOKEN) console.warn('Falta ASAAS_WEBHOOK_TOKEN no .env (webhook ficará sem verificação de origem)');
+  conferirChaveAsaas();
   if (!process.env.FIREBASE_SERVICE_ACCOUNT && !process.env.FIREBASE_SERVICE_ACCOUNT_PATH) console.warn('Falta a chave do Firebase');
 });
