@@ -12,7 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Big+Shoulders+Display:wght@500;700;900&family=Sora:wght@300;400;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script>
 /* Aplica o tema ANTES de a página ser pintada, senão dá um flash branco
    ao abrir no modo noite. O resto da lógica fica no script principal. */
@@ -829,6 +829,254 @@
     .product-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.8rem; }
     .login-logo { width: 80px; height: 80px; }
   }
+
+  /* ===== VITRINE (seção de apresentação) ===== */
+  /* Na vitrine o catálogo some: sem pílulas de categoria, sem busca, sem filtros */
+  body.modo-vitrine .cat-nav,
+  body.modo-vitrine .topbar-search,
+  body.modo-vitrine .side-filtros,
+  body.modo-vitrine .side-title.filtros-titulo { display:none !important; }
+  /* a vitrine ocupa a largura toda: o respiro é dela, não do contêiner do site */
+  body.modo-vitrine .container { max-width:none; padding:0; }
+  /* enquanto a vitrine está aberta, a navegação acompanha o tom escuro dela */
+  body.modo-vitrine .sidebar { background:#1B1224; border-right-color:#3D2152; }
+  body.modo-vitrine .side-title { color:#8E7CA3; }
+  body.modo-vitrine .side-btn { color:#C0A8D6; }
+  body.modo-vitrine .side-btn:hover { background:#2A1838; color:#F7F2FA; }
+  body.modo-vitrine .side-btn.active { background:#3D2152; color:#F7F2FA; }
+  body.modo-vitrine .side-btn .s-ico { color:#E9B44C; }
+  body.modo-vitrine .bottom-nav { background:#1B1224; border-top-color:#3D2152; }
+  body.modo-vitrine .bottom-nav button { color:#C0A8D6; }
+  body.modo-vitrine .bottom-nav button.active { color:#E9B44C; }
+  body.modo-vitrine .bottom-nav .bn-ico { color:inherit; }
+#inicio{background:var(--tinta);color:var(--leite);font-family:var(--corpo);font-weight:300;line-height:1.6;margin:calc(var(--topbar-h) * -1) 0 0;padding-top:var(--topbar-h)}
+#inicio{
+    --tinta:#150C1C;        /* plum quase preto — o fundo */
+    --tinta-2:#241333;      /* plum elevado — cartões */
+    --ameixa:#3D2152;       /* plum claro — bordas, traços */
+    --ouro:#E9B44C;         /* dourado da fachada */
+    --ouro-esc:#B8801F;
+    --lilas:#C0A8D6;        /* texto secundário */
+    --leite:#F7F2FA;        /* texto principal */
+    --foil:linear-gradient(100deg,#B8801F 0%,#E9B44C 22%,#FBEBB8 42%,#E9B44C 60%,#C08D28 100%);
+
+    --display:'Big Shoulders Display',Impact,sans-serif;
+    --corpo:'Sora',system-ui,sans-serif;
+    --dado:'JetBrains Mono',ui-monospace,monospace;
+
+    --gutter:clamp(1.25rem,5vw,5.5rem);
+    --limite:1280px;
+  }
+#inicio *{margin:0;padding:0;box-sizing:border-box}
+#inicio img{display:block;max-width:100%}
+#inicio a{color:inherit;text-decoration:none}
+#inicio ::selection{background:var(--ouro);color:var(--tinta)}
+#inicio :focus-visible{outline:2px solid var(--ouro);outline-offset:3px;border-radius:2px}
+#inicio .vt-env{max-width:var(--limite);margin-inline:auto;padding-inline:var(--gutter)}
+#inicio /* ---------- tipografia ---------- */
+  .vt-display{font-family:var(--display);font-weight:900;line-height:.86;letter-spacing:-.01em;text-transform:uppercase}
+#inicio .vt-eyebrow{
+    font-family:var(--dado);font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--ouro);display:flex;align-items:center;gap:.7rem;
+  }
+#inicio .vt-eyebrow::before{content:'';width:26px;height:1px;background:var(--ouro);flex-shrink:0}
+#inicio .vt-foil{background:var(--foil);-webkit-background-clip:text;background-clip:text;color:transparent}
+#inicio /* ---------- topo ---------- */
+  .vt-nav{
+    position:fixed;inset:0 0 auto;z-index:60;display:flex;align-items:center;gap:1rem;
+    padding:.85rem var(--gutter);
+    background:rgba(21,12,28,.55);backdrop-filter:blur(14px);
+    border-bottom:1px solid transparent;transition:border-color .3s,background .3s;
+  }
+#inicio .vt-nav.densa{background:rgba(21,12,28,.9);border-bottom-color:var(--ameixa)}
+#inicio .vt-nav-marca{display:flex;align-items:center;gap:.7rem;margin-right:auto}
+#inicio .vt-nav-marca img{width:38px;height:38px;border-radius:50%}
+#inicio .vt-nav-marca span{font-family:var(--display);font-weight:700;font-size:1.15rem;letter-spacing:.02em;text-transform:uppercase}
+#inicio .vt-nav-links{display:flex;gap:1.6rem;font-size:.82rem;letter-spacing:.04em}
+#inicio .vt-nav-links a{color:var(--lilas);transition:color .2s}
+#inicio .vt-nav-links a:hover{color:var(--leite)}
+@media(max-width:820px){#inicio .vt-nav-links{display:none}}
+#inicio .vt-nav-marca span{white-space:nowrap}
+@media(max-width:520px){#inicio .vt-nav-marca span{font-size:.95rem}
+#inicio .vt-nav .vt-btn{padding:.55rem .85rem;font-size:.68rem}}
+@media(max-width:400px){#inicio .vt-nav-marca span{display:none}}
+#inicio .vt-btn{
+    display:inline-flex;align-items:center;gap:.55rem;font-family:var(--dado);
+    font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;
+    padding:.85rem 1.5rem;border-radius:2px;border:1px solid var(--ouro);
+    color:var(--ouro);background:transparent;cursor:pointer;
+    transition:color .25s,background .25s,transform .25s;white-space:nowrap;
+  }
+#inicio .vt-btn:hover{background:var(--ouro);color:var(--tinta)}
+#inicio .vt-btn-cheio{background:var(--foil);color:var(--tinta);border-color:transparent;font-weight:500}
+#inicio .vt-btn-cheio:hover{transform:translateY(-2px)}
+#inicio .vt-nav .vt-btn{padding:.6rem 1.1rem}
+#inicio /* ---------- HERO ---------- */
+  .vt-hero{position:relative;min-height:100svh;display:grid;place-items:center;padding:clamp(5.5rem,12vh,7.5rem) 0 clamp(4rem,9vh,5.5rem);overflow:hidden}
+#inicio /* brilho ambiente atrás do chevron */
+  .vt-hero::before{
+    content:'';position:absolute;width:min(120vw,1100px);aspect-ratio:1;
+    background:radial-gradient(circle,rgba(233,180,76,.16),rgba(61,33,82,.18) 42%,transparent 68%);
+    top:44%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+  }
+#inicio .vt-hero-env{position:relative;z-index:2;width:100%;max-width:var(--limite);
+            margin-inline:auto;padding-inline:var(--gutter);text-align:center}
+#inicio /* A ASSINATURA: o chevron da marca vira janela para as fotos */
+  .vt-chevron{position:relative;width:min(46vw,300px);aspect-ratio:1/.82;margin:0 auto clamp(1rem,2.5vh,1.8rem)}
+#inicio .vt-chevron-fotos{position:absolute;inset:0;clip-path:url(#recorteV);background:var(--ameixa);overflow:hidden}
+#inicio .vt-chevron-fotos img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    opacity:0;transform:scale(1.12);transition:opacity 1.1s ease,transform 6s linear;
+  }
+#inicio .vt-chevron-fotos img.on{opacity:.92;transform:scale(1)}
+#inicio .vt-chevron-traco{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#inicio .vt-chevron-traco path{
+    fill:none;stroke:url(#tintaOuro);stroke-width:3.2;stroke-linejoin:miter;
+    stroke-dasharray:1200;stroke-dashoffset:1200;
+    animation:vtTracar 1.6s cubic-bezier(.6,0,.2,1) .15s forwards;
+  }
+@keyframes vtTracar{to{stroke-dashoffset:0}}
+#inicio .vt-hero h1{font-size:clamp(2.7rem,8.4vw,6.6rem);margin-bottom:.3rem}
+#inicio .vt-hero h1 .l2{display:block;font-weight:500;font-size:.3em;letter-spacing:.3em;padding-left:.3em;margin-top:.5em}
+#inicio .vt-hero-lead{
+    max-width:44ch;margin:clamp(1rem,2.4vh,1.6rem) auto clamp(1.4rem,3vh,2.1rem);color:var(--lilas);
+    font-size:clamp(.9rem,1.4vw,1.02rem);
+  }
+#inicio .vt-hero-ctas{display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap}
+#inicio .vt-rolar{
+    position:absolute;bottom:1.6rem;left:50%;transform:translateX(-50%);z-index:2;
+    font-family:var(--dado);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--lilas);display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  }
+#inicio .vt-rolar i{display:block;width:1px;height:44px;background:linear-gradient(var(--ouro),transparent);animation:vtPulsa 2.4s ease-in-out infinite}
+@keyframes vtPulsa{0%,100%{opacity:.25;transform:scaleY(.6)}50%{opacity:1;transform:scaleY(1)}}
+#inicio /* aparição em sequência no carregamento */
+  .vt-surge{opacity:0;transform:translateY(22px);animation:vtSurgir .9s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes vtSurgir{to{opacity:1;transform:none}}
+#inicio .vt-d1{animation-delay:.9s}
+#inicio .vt-d2{animation-delay:1.05s}
+#inicio .vt-d3{animation-delay:1.2s}
+#inicio .vt-d4{animation-delay:1.4s}
+#inicio /* ---------- letreiro ---------- */
+  .vt-letreiro{
+    border-block:1px solid var(--ameixa);background:var(--tinta-2);
+    padding:.9rem 0;overflow:hidden;white-space:nowrap;
+  }
+#inicio .vt-letreiro-trilho{display:inline-flex;gap:2.6rem;animation:vtCorrer 34s linear infinite;will-change:transform}
+#inicio .vt-letreiro:hover .vt-letreiro-trilho{animation-play-state:paused}
+#inicio .vt-letreiro span{
+    font-family:var(--display);font-weight:700;font-size:1.5rem;text-transform:uppercase;
+    letter-spacing:.06em;color:var(--lilas);display:inline-flex;align-items:center;gap:2.6rem;
+  }
+#inicio .vt-letreiro span::after{content:'';width:7px;height:7px;background:var(--ouro);transform:rotate(45deg)}
+@keyframes vtCorrer{to{transform:translateX(-50%)}}
+#inicio /* ---------- seções ---------- */
+  .vt-secao{padding:clamp(4.5rem,10vw,8.5rem) 0;position:relative}
+#inicio .vt-secao-cab{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex-wrap:wrap;margin-bottom:3rem}
+#inicio .vt-secao-cab h2{font-size:clamp(2.4rem,6vw,4.6rem)}
+#inicio .vt-secao-cab p{color:var(--lilas);max-width:38ch;font-size:.95rem}
+#inicio /* divisor com o chevron da marca */
+  .vt-divisor{display:flex;align-items:center;gap:1.2rem;color:var(--ameixa)}
+#inicio .vt-divisor::before, #inicio .vt-divisor::after{content:'';height:1px;background:currentColor;flex:1}
+#inicio .vt-divisor svg{width:26px;height:20px;stroke:var(--ouro);fill:none;stroke-width:2.4;flex-shrink:0}
+#inicio /* ---------- vitrine de produtos ---------- */
+  .vt-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1.4rem}
+#inicio .vt-peca{position:relative;background:var(--tinta-2);border:1px solid var(--ameixa);overflow:hidden;
+        transition:border-color .35s,transform .35s}
+#inicio .vt-peca:hover{border-color:var(--ouro);transform:translateY(-5px)}
+#inicio .vt-peca-foto{position:relative;aspect-ratio:3/4;overflow:hidden;background:var(--ameixa);display:grid;place-items:center}
+#inicio .vt-peca-foto img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.2,.7,.3,1)}
+#inicio .vt-peca:hover .vt-peca-foto img{transform:scale(1.06)}
+#inicio .vt-peca-vazia{font-family:var(--dado);font-size:.66rem;letter-spacing:.2em;color:var(--lilas);opacity:.5}
+#inicio .vt-peca-cat{
+    position:absolute;top:.8rem;left:.8rem;font-family:var(--dado);font-size:.6rem;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--tinta);
+    background:var(--ouro);padding:.28rem .6rem;
+  }
+#inicio .vt-peca-corpo{padding:1.1rem 1.15rem 1.3rem}
+#inicio .vt-peca-nome{font-family:var(--display);font-weight:700;font-size:1.35rem;line-height:1.05;
+             text-transform:uppercase;margin-bottom:.55rem;overflow-wrap:anywhere}
+#inicio .vt-peca-preco{font-family:var(--dado);font-size:1rem;color:var(--ouro);margin-bottom:.75rem}
+#inicio .vt-peca-preco s{color:var(--lilas);opacity:.55;font-size:.8em;margin-left:.4rem}
+#inicio .vt-peca-tam{display:flex;flex-wrap:wrap;gap:.3rem}
+#inicio .vt-peca-tam b{
+    font-family:var(--dado);font-weight:500;font-size:.63rem;letter-spacing:.08em;
+    border:1px solid var(--ameixa);color:var(--lilas);padding:.2rem .45rem;
+  }
+#inicio .vt-peca-cores{display:flex;gap:.32rem;margin-top:.6rem}
+#inicio .vt-peca-cores i{width:13px;height:13px;border-radius:50%;box-shadow:0 0 0 1px var(--ameixa)}
+#inicio .vt-carregando{display:grid;place-items:center;padding:3.5rem 0;gap:1rem;color:var(--lilas)}
+#inicio .vt-carregando i{width:30px;height:30px;border:2px solid var(--ameixa);border-top-color:var(--ouro);
+                border-radius:50%;animation:vtGirar .8s linear infinite;display:block}
+@keyframes vtGirar{to{transform:rotate(360deg)}}
+#inicio /* ---------- a grade de tamanhos ---------- */
+  .vt-tamanhos{background:var(--tinta-2);border-block:1px solid var(--ameixa)}
+#inicio .vt-tam-linha{display:flex;align-items:baseline;gap:1.5rem;flex-wrap:wrap;padding:1.6rem 0;border-bottom:1px solid var(--ameixa)}
+#inicio .vt-tam-linha:last-child{border-bottom:0}
+#inicio .vt-tam-rot{font-family:var(--dado);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+           color:var(--lilas);min-width:12ch}
+#inicio .vt-tam-chips{display:flex;gap:.5rem;flex-wrap:wrap}
+#inicio .vt-tam-chips b{
+    font-family:var(--display);font-weight:700;font-size:1.65rem;line-height:1;
+    color:var(--leite);padding:.35rem .7rem;border:1px solid var(--ameixa);transition:all .25s;
+  }
+#inicio .vt-tam-chips b:hover{border-color:var(--ouro);color:var(--ouro)}
+#inicio /* ---------- diferenciais ---------- */
+  .vt-tres{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--ameixa);
+        border:1px solid var(--ameixa)}
+#inicio .vt-tres article{background:var(--tinta);padding:2.2rem 1.8rem;transition:background .3s}
+#inicio .vt-tres article:hover{background:var(--tinta-2)}
+#inicio .vt-tres svg{width:30px;height:30px;stroke:var(--ouro);fill:none;stroke-width:1.6;
+            stroke-linecap:round;stroke-linejoin:round;margin-bottom:1.1rem}
+#inicio .vt-tres h3{font-family:var(--display);font-weight:700;font-size:1.6rem;text-transform:uppercase;margin-bottom:.5rem}
+#inicio .vt-tres p{color:var(--lilas);font-size:.9rem}
+#inicio /* ---------- loja física ---------- */
+  .vt-loja{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(2rem,5vw,4.5rem);align-items:center}
+@media(max-width:860px){#inicio .vt-loja{grid-template-columns:1fr}}
+#inicio .vt-loja h2{font-size:clamp(2.4rem,6vw,4.4rem);margin:.8rem 0 1.1rem}
+#inicio .vt-loja p{color:var(--lilas);margin-bottom:1.8rem;max-width:46ch}
+#inicio .vt-ficha{border-top:1px solid var(--ameixa)}
+#inicio .vt-ficha div{display:flex;gap:1.4rem;padding:1rem 0;border-bottom:1px solid var(--ameixa);font-size:.92rem}
+#inicio .vt-ficha dt{font-family:var(--dado);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+            color:var(--ouro);min-width:9ch;padding-top:.2rem}
+#inicio .vt-ficha dd{color:var(--leite)}
+#inicio .vt-vitrine-foto{position:relative;aspect-ratio:4/5;border:1px solid var(--ameixa);overflow:hidden;background:var(--tinta-2)}
+#inicio .vt-vitrine-foto img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s}
+#inicio .vt-vitrine-foto img.on{opacity:.95}
+#inicio .vt-vitrine-foto::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(200deg,transparent 55%,rgba(21,12,28,.85));
+  }
+#inicio /* ---------- chamada final ---------- */
+  .vt-final{text-align:center;position:relative;overflow:hidden}
+#inicio .vt-final::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at 50% 120%,rgba(233,180,76,.2),transparent 62%);
+  }
+#inicio .vt-final > *{position:relative}
+#inicio .vt-final h2{font-size:clamp(2.8rem,9vw,7rem);margin-bottom:1.2rem}
+#inicio .vt-final p{color:var(--lilas);max-width:40ch;margin:0 auto 2.4rem}
+#inicio /* ---------- rodapé ---------- */
+  footer{border-top:1px solid var(--ameixa);padding:3rem 0 2.2rem;font-size:.85rem;color:var(--lilas)}
+#inicio .vt-rodape{display:flex;justify-content:space-between;gap:2rem;flex-wrap:wrap;align-items:flex-start}
+#inicio .vt-rodape-marca{display:flex;align-items:center;gap:.8rem;margin-bottom:.9rem}
+#inicio .vt-rodape-marca img{width:44px;height:44px;border-radius:50%}
+#inicio .vt-rodape-marca strong{font-family:var(--display);font-weight:700;font-size:1.3rem;
+                       text-transform:uppercase;color:var(--leite)}
+#inicio .vt-rodape-links{display:flex;flex-direction:column;gap:.5rem}
+#inicio .vt-rodape-links a:hover{color:var(--ouro)}
+#inicio .vt-creditos{margin-top:2.4rem;padding-top:1.4rem;border-top:1px solid var(--ameixa);
+            font-size:.74rem;opacity:.65;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+#inicio /* ---------- revelação no rolar ---------- */
+  .vt-rev{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.2,.7,.3,1),transform .8s cubic-bezier(.2,.7,.3,1)}
+#inicio .vt-rev.vis{opacity:1;transform:none}
+#inicio .vt-rev-2{transition-delay:.1s}
+#inicio .vt-rev-3{transition-delay:.2s}
+@media (prefers-reduced-motion:reduce){#inicio *, #inicio *::before, #inicio *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+                         transition-duration:.001ms!important}
+#inicio .vt-rev{opacity:1;transform:none}
+#inicio .vt-surge{opacity:1;transform:none}
+#inicio .vt-chevron-traco path{stroke-dashoffset:0}}
 </style>
 </head>
 <body>
@@ -891,7 +1139,8 @@
 <div class="app-shell">
   <aside class="sidebar">
     <div class="side-title">Navegação</div>
-    <button class="side-btn active" data-tab="loja" onclick="switchTab('loja')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M12 8.2a2.3 2.3 0 1 1 2.3-2.3"/><path d="M12 8.2v2.4"/><path d="M3.6 17.4 12 10.6l8.4 6.8a1 1 0 0 1-.63 1.78H4.23a1 1 0 0 1-.63-1.78Z"/></svg></span> Catálogo</button>
+    <button class="side-btn active" data-tab="inicio" onclick="switchTab('inicio')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M4.5 5.5h15l-1.2 4.2a3.2 3.2 0 0 1-3.1 2.3H8.8a3.2 3.2 0 0 1-3.1-2.3Z"/><path d="M9 12v6.5M15 12v6.5M7 18.5h10"/></svg></span> Início</button>
+    <button class="side-btn" data-tab="loja" onclick="switchTab('loja')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M12 8.2a2.3 2.3 0 1 1 2.3-2.3"/><path d="M12 8.2v2.4"/><path d="M3.6 17.4 12 10.6l8.4 6.8a1 1 0 0 1-.63 1.78H4.23a1 1 0 0 1-.63-1.78Z"/></svg></span> Catálogo</button>
     <button class="side-btn" data-tab="carrinho" onclick="switchTab('carrinho')"><span class="s-ico"><svg viewBox="0 0 24 24"><path d="M5.2 7.2h13.6l1.1 12a1.2 1.2 0 0 1-1.2 1.3H5.3a1.2 1.2 0 0 1-1.2-1.3l1.1-12Z"/><path d="M8.7 10.2V6.6a3.3 3.3 0 0 1 6.6 0v3.6"/></svg></span> Carrinho <span class="side-badge" id="side-cart-badge" style="display:none">0</span></button>
 
     <div class="side-title filtros-titulo">Filtros</div>
@@ -936,7 +1185,208 @@
 <div class="container">
 
   <!-- ================= CATÁLOGO ================= -->
-  <div id="loja" class="section active">
+<div id="inicio" class="section active">
+
+
+<!-- formas reutilizáveis: o chevron duplo da marca -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <linearGradient id="tintaOuro" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#B8801F"/><stop offset="35%" stop-color="#FBEBB8"/>
+      <stop offset="70%" stop-color="#E9B44C"/><stop offset="100%" stop-color="#C08D28"/>
+    </linearGradient>
+    <!-- recorte do V duplo, em coordenadas relativas (0–1) -->
+    <clipPath id="recorteV" clipPathUnits="objectBoundingBox">
+      <path d="M.06,.10 H.30 L.50,.52 L.70,.10 H.94 L.62,.78 H.38 Z"/>
+    </clipPath>
+  </defs>
+</svg>
+
+<!-- ============ HERO ============ -->
+<header class="vt-hero" id="vt-topo">
+  <div class="vt-hero-env">
+
+    <div class="vt-chevron vt-surge">
+      <div class="vt-chevron-fotos" id="vt-chevron-fotos"></div>
+      <svg class="vt-chevron-traco" viewBox="0 0 100 82" aria-hidden="true">
+        <path d="M6,10 H30 L50,52 L70,10 H94 L62,78 H38 Z"/>
+      </svg>
+    </div>
+
+    <h1 class="vt-display vt-surge vt-d1">
+      Vista sua vibe
+      <span class="l2 vt-foil">Santarém · Pará</span>
+    </h1>
+
+    <p class="vt-hero-lead vt-surge vt-d2">
+      Conjuntos, leggings, tops e shorts em suplex de trama dupla — caimento que
+      segura o treino e a rua. Prove na loja ou receba em casa.
+    </p>
+
+    <div class="vt-hero-ctas vt-surge vt-d3">
+      <a class="vt-btn vt-btn-cheio" href="#" onclick="event.preventDefault(); switchTab('loja')">Comprar agora</a>
+      <a class="vt-btn" href="#vt-colecao">Ver a coleção</a>
+    </div>
+  </div>
+
+  <span class="vt-rolar vt-surge vt-d4">role<i></i></span>
+</header>
+
+<!-- ============ LETREIRO ============ -->
+<div class="vt-letreiro" aria-hidden="true">
+  <div class="vt-letreiro-trilho" id="vt-letreiro"></div>
+</div>
+
+<!-- ============ COLEÇÃO ============ -->
+<section class="vt-secao" id="vt-colecao">
+  <div class="vt-env">
+    <div class="vt-secao-cab vt-rev">
+      <div>
+        <p class="vt-eyebrow">Em estoque agora</p>
+        <h2 class="vt-display">A coleção</h2>
+      </div>
+      <p>Peças conferidas uma a uma. O que aparece aqui tem tamanho disponível
+         para pronta entrega.</p>
+    </div>
+
+    <div id="vt-vitrine" class="vt-grade" aria-live="polite"></div>
+
+    <div class="vt-carregando" id="vt-carregando"><i></i><span>Buscando as peças…</span></div>
+
+    <div style="text-align:center;margin-top:3rem" class="vt-rev">
+      <a class="vt-btn vt-btn-cheio" href="#" onclick="event.preventDefault(); switchTab('loja')">Ver catálogo completo</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GRADE DE TAMANHOS ============ -->
+<section class="vt-secao vt-tamanhos" id="vt-grade">
+  <div class="vt-env">
+    <div class="vt-secao-cab vt-rev">
+      <div>
+        <p class="vt-eyebrow">Como a gente veste</p>
+        <h2 class="vt-display">A grade</h2>
+      </div>
+      <p>Blusa e short são peças separadas: no conjunto, você escolhe o tamanho
+         de cima e a numeração de baixo. Nada de comprar torto.</p>
+    </div>
+
+    <div class="vt-rev">
+      <div class="vt-tam-linha">
+        <span class="vt-tam-rot">Blusa e top</span>
+        <div class="vt-tam-chips">
+          <b>PP</b><b>P</b><b>M</b><b>G</b><b>GG</b>
+        </div>
+      </div>
+      <div class="vt-tam-linha">
+        <span class="vt-tam-rot">Calça e short</span>
+        <div class="vt-tam-chips">
+          <b>36</b><b>38</b><b>40</b><b>42</b><b>44</b><b>46</b>
+        </div>
+      </div>
+      <div class="vt-tam-linha">
+        <span class="vt-tam-rot">Atacado</span>
+        <div class="vt-tam-chips" style="align-items:center">
+          <b>3+</b>
+          <span style="color:var(--lilas);font-size:.9rem;max-width:40ch">
+            A partir de 3 peças o preço muda sozinho no carrinho.
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DIFERENCIAIS ============ -->
+<section class="vt-secao">
+  <div class="vt-env">
+    <div class="vt-divisor vt-rev" style="margin-bottom:3rem">
+      <svg viewBox="0 0 26 20" aria-hidden="true"><path d="M2,3 L13,17 L24,3"/></svg>
+    </div>
+
+    <div class="vt-tres">
+      <article class="vt-rev">
+        <svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg>
+        <h3>Trama dupla</h3>
+        <p>Suplex denso que não fica transparente no agachamento — testado antes
+           de entrar na loja.</p>
+      </article>
+      <article class="vt-rev vt-rev-2">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg>
+        <h3>Pronta entrega</h3>
+        <p>O que está no site está na arara. Comprou de manhã, sai para entrega
+           no mesmo dia em Santarém.</p>
+      </article>
+      <article class="vt-rev vt-rev-3">
+        <svg viewBox="0 0 24 24"><path d="M12 20.5s-7.2-4.6-7.2-9.6a4.3 4.3 0 0 1 7.2-2.8 4.3 4.3 0 0 1 7.2 2.8c0 5-7.2 9.6-7.2 9.6z"/></svg>
+        <h3>Prova sem pressa</h3>
+        <p>Provador na loja física. Não serviu, a gente troca o tamanho na hora.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOJA FÍSICA ============ -->
+<section class="vt-secao" id="vt-loja">
+  <div class="vt-env vt-loja">
+    <div class="vt-rev">
+      <p class="vt-eyebrow">Venha provar</p>
+      <h2 class="vt-display">A loja</h2>
+      <p>A fachada roxa e dourada em Santarém. Entra, prova, leva. E se preferir
+         resolver pelo celular, o catálogo está sempre aberto.</p>
+
+      <dl class="vt-ficha">
+        <div><dt>Onde</dt><dd id="vt-f-endereco">Santarém — Pará</dd></div>
+        <div><dt>Horário</dt><dd>Segunda a sábado, 9h às 18h</dd></div>
+        <div><dt>WhatsApp</dt><dd><a id="vt-f-whats" href="#" onclick="if(!this.dataset.wa){event.preventDefault(); switchTab('loja')}" style="color:var(--ouro)">Falar com a loja</a></dd></div>
+        <div><dt>Entrega</dt><dd>Santarém no mesmo dia · Brasil pelos Correios</dd></div>
+      </dl>
+    </div>
+
+    <div class="vt-vitrine-foto vt-rev vt-rev-2">
+      <img id="vt-foto-loja" alt="Peça em destaque da Vibe Fitness STM">
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHAMADA FINAL ============ -->
+<section class="vt-secao vt-final">
+  <div class="vt-env">
+    <h2 class="vt-display vt-rev">Bora treinar<br><span class="vt-foil">bonita</span></h2>
+    <p class="vt-rev vt-rev-2">Monte seu carrinho, escolha cor e tamanho e finalize por
+       Pix, cartão ou WhatsApp.</p>
+    <div class="vt-rev vt-rev-3" style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">
+      <a class="vt-btn vt-btn-cheio" href="#" onclick="event.preventDefault(); switchTab('loja')">Abrir o catálogo</a>
+      <a class="vt-btn" href="#vt-topo">Voltar ao topo</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="vt-env vt-rodape">
+    <div>
+      <div class="vt-rodape-marca">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAMAAABOo35HAAAAflBMVEXrthIAAACmdpz9/PLNmlX3wRwOCQO4hm///wDLoSHy5KK0kCOtenfoyl9zaRWpngz/qgCUdCFpUR2MbSCviylNOhb/fwDCmiH/AAD/qlVQMhyzgYL//168mCSqqlUAAE4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYsWq6AAAAIHRSTlP+AP////7//wGf/1n//w0VAyX/////AnYBAwz/AoEDBbWequMAABHtSURBVHja7Z3ZeqO6EkaLRDQiYDC2Yzvp9D7v/5YHCYwZNKMJHF30l7YYF1W/SiUhIAlVMG5q/Pxv1TQFKflQ/tH/102VwLDP8Wu8j+8CIU56r+pjd8//q5q6uOU5iEue3yi1rgQj5h0WfnCCuughpaQIUD1rCbMe2dd/eN+w7vVPd4dNx0mIiE8t74nhH88W5g8W/u+LalPrdQacJsw6Yh0wn7w8wcLU9/5X33KwUwjs/FZ/02NXO4LVkaqKfJ1BsYFRA8Nf1T5g1UcnpEZNZdFQXnjrsKqBlLuSPngd6y3Doq07tSlwWwZ/dOuO7mBh0vg1N/eknryIZeHr9mBVX71ReSwtr1tDooltwbpiolS+jGrSPuZEvertwCKomhxClbwgYr8NWD2qFAIWgusrflgEVR0YlTNcdmFVHaooSmFfu6zCOsaDqsdlN5CwCKsOr1UMXDZ72WDTA4u4UEEXpx6jg3UkqGIseWtZ16hg1UEDK0lY3/qipYyEDVi4NatbdB44Ko2ldhGsmFUBcZfWFzGOAFZ7EVUes1kNvlgHh1XH2AZyjOsYGNaRmNUmCjWuKiCsNrbahll15bbWFWHfyj41rrWuuAIW3owL2nJFeBEXtOKKprCuG3NBK60i7L0VXLpiY0wLDOWq2aALPhM3uPIHC2/UBQdXbPv9nmC10n7bNKs2hvg2knl9WK0F57DxkoKRzIO+CyZ5CtunZSLzoB21V5u3q0d8enQM67jpZnDRKDqFtSdWBrRAl9Weiq4n6sBqkhrglWmBjl0VALujhZ3AanbIigTz+G4f1j5ZUVrWYR13p1fPDBe2DKveWTtoplvw8qw02kRQ6w/umZW6banAqpIKYOe0jpZgYbyHPIO41Er5LRVY+2dF8ltXG7Bw8m/vrAgtlWk24L+T8/E+LwetnT7aMvxtL9OcrId1td8QLmHJaR3e2eVgU+TrlbCcNIT6tHisPmxelpyWGBa4EffDEpcCq49xsc+KzKa8roH1lfxzJKiHoaCD9L6XGxwcsErhWyLyIO7leMk0yO78Y2F6LlhRkT8aw6p8ZRoOQtn6WNQiuec6ieRBGGH5Gp34ENBi1H1YbghVZQtEEZa/EUL+7TM8zh0rSWwKoQVrDACps/pwcxli2QL+9A+/qQY2Ac+sJNEWCJzQa5eQ3cC9e2oIR6XiOyJE4YQ8Ckt1cs5K5IjgrUtoQIvD6t3tdfAdESLKYc3ZeA0aJo5Y6cCqwwwSTlEcArHiZ2uAnUgOlHQfBxD+G0KpI0LocJQXQBz89J45jnjFqrCu4Ua+Bh4oJKv0lvyowgo5QvEg8r6I6P2xon3ESg1WHXQKSMeEoeTvnA6RR40HlhdCyPLBTjV7aQifpWalH8DrnLUPlVT6B/dHf6zYpgXLDnTj2MfUaAVlxckDgl91VxrSOgRsCJ+FMSVwDuuKGw+KtByomdGSsqJjHb5NC3yHDUsfY2TUD7JMgw9TW+ZqwPvsbf20S5iYq41Mj2JY2ENH512TFi9R4zzmWmQfwH9HR9OrePGp87axNa0vMSwfPWitAZuQcUSFv/mwrnc/PWgNWgETNcsGEYL0oJVzoEFZEdMCHiyPE215QjTbLGiiZmlaMJkz4y/np9YkfvgfCZuH8RxYd58zuJHKiGDgRM3CtGBsWD7zWAoi/xE8UTNLPsBk0gzERCs8KyAp05oFy/u7l5II6hBDomZqWhAw8y5sEg/vUSRqoBpl4+EZN/gf0hH1qd9DN4SDxH8tYQUZK+QTCTAlhO2HUGGGG377Z8X3NZ64I//XWCT/zWEFGv86cMcrwjeES4mHwAOrhzhHd6YSj6ewcLD3L3kOx3DOMKxGUTwEX+CCPc09gqBh6YcQfnqD0ehOkFALggVZUxSi0R0Iy+rphxDBMjNK7+6gcNc3+CF4G9QxphWwIZy1hxDFWgSa7+6E8kPwn8nSIxJY3CftIYX1E34xAo3RnQDlexI6hL4a3iuEcbB6rJEBPl/C1BZ55OGFCjU/PD5gfUWxjpjauzuBytMNI1k/Zdn/i4ZVH8RDyE60ROQP0bDq37mA0FO5+bQiEfdetL46WMd4VuF+F7+7Ew4WPEOHaGCNAKGIWD1EC+KRrCmt0L1nVqQFyTWqRTX5ozth/ZBOMIXYVgHuKEXGqu8eQuj0DJtWXIL1CEshho4hk1ZcrOhLdYDjW1czRlY0pwXX+BZNPkTRe2b0pSHGVd4PUYn7U+HbAOIW38qah0N0lwTfyR1wsotPw3hReIiuMYy1FK2473xBbqvNIez2CwL2Ff4HjBpDtCyiTbO2lOVbmaHx7vxjyY4p20/nMDrNIZg0hqi983Ep28LbNqOk+g2z/jf6n/4myucxRqXfXnCnGXO/8d6PYil3Qbo7Zvn39oE9L0b+9FB3ayUDFvOGiDk+eAlhsao7e8psw2qMYZFr0roYxLMs7jEkuDLZuZ+87cCq/cGiN4d0YBF3F1RmCufucJW2mkNYsXBrpgurBD1YQlqZ0rnpVtZgrcg5oDcdM8+ed6YMazgFMoVFj2BFtNJbAmti0lLHtIxgAV92FGGNz7s2doA1OQekAQuN7nh8n0h8iMcpzGG1jzSLCVamti0CfcsC7vNQhoXigDVIPOg9Xx1Y2WpYkJW2YK1K0Kj74diwfMNCJYoBFiiHfdk42tkmLFgLCyn64cSwfMOCzBYsAB9+ODEsE4GHNbCQnQ7P6pcM1fxwalg6sBD3+KV3WKvHDNVMC037Z/pBKVplWVDGAUtwNxMrQGawBCHrX51+qZ0cDVgyrUzDCzVgCczHaq7KLyzhVc87HMqwRK72d4OwFCR+bljKsLpsFBI1kxuDJQ+1sjlJnUwpEqc8NgYLSskzXhiWGizyEP5KByy2Bksm8QvDUoHV5Uj/CsZCNg1L0PojTVgIjQezSvaAmH9YViayZRJYJWjBQllJ+PSlG3Msl7w2Ckss8eUb0oGFynLW70XsEcJym7CEpsUwLAGsJaqngInij2FLl7DWpmjkEl/KsitjWK0DsolnyxOwAKLSHarUEix+HoVpWDxYrQGV4ravFMNCLt3SGiy+H5bShMGwKxIOwyxsiwErcyli69PKMj9kGhYbFhL3xhenWMBCbiV/9eiO1LQyJoCJlTxm4sgyiPNszRzNMGumRJHD4uSdkGiaQjbeE+SjHjNhnMNC2ZvTvjWBZWlK6dsba74K27BYbqgw12X2QJZOh4TzuVbDulmDxfbDUmG2kPLEpZlqsVvDzF1zeEvA0sxupsTzBs4Zcx1UhtinD4QdqDqMSgtrsJimVaokQNWVBklh8YdxkB1YuVXTQgqGxYKVgQ1Y/F0thPaNPViMm86UhiG0Zi2NTqEHy8L4TtXCuoEj0+JP9TGEBeaw1sdeKZ3aXdiFlSmo7TpYZRhY9KUBa6+jZNOgEQleJPBtWRYkq4Nl7a3fmR9mspkxHmHZmM5GX3Sy9wrdLGgswSksnb5NaSVyqMHielAT0xLN5LTSGuq83WEDFnk50xWsskSOYOnHWVYmlX63mmXzhfJROhMpJ/JMYWnMdSgt6Dt0L5TbeztzdDeZyPINYU2TpTqQ14ek3VIFVpdVLh+3g8oMbMOatbY6kNdLVkoXwbC6vMpwP0LDMtQsU1h2hjHIh6XB6vKIj/sRG5YZrHl36q/66yhvFiTrO7nbXhKqw/D3r/gmjGDNB8M0IFuRLNwtNlZY90NJjtgE1qKf/ubzFTry7r39ZexKlXswgLVMl6m5IR0fsxK/H/t1Si2u6YrcwGIcVgmWZPagVvxOYf3YXLrHDSzWUZX2K9+svPb7XHqztrpoSKbwMo8mrMc6B4jh8EgrxbYqJHWwXLCKaWnBQpzRbhkspLk6gFyyHCxErfA0Nd6w4C/uUCrtZ02yrj0su4uzIUuWRdewESyDUTKruqVvpuurWLip5xLndj/ijuRzMxh9wzfegjIZb4z5sYYNXRSIvQiN4rwAxZDUyWcZMukYOl32aFjyKOMUyRJF3P0Wx7GSJR1g/S5lJynVyLJiXFEyojL9lEyEC7tGVSYfKYrlKxaxlmZsWb9+qOSFg2X9+qHcC2P4GOQGvHDyMchIvlMUuRc+YN1//VDuhcOnkY+/fiiJSEewVi0Ln/ZlWcHbkrX18xfGkfjnoJszfyenT1N7Xjj6nLt5//ByOndlWXGZ/XAeleVRHn+eT8tz9DvNj0h3PH2ezszr+mRXaJX+c30TWK3Emz6Ezz99OaXzis/JL+npz6icp1uTn4Y/z/NrGfb6nNc8jrm4rL7ic51hwdOwnrBWfJe1hXWi5bKomOG7kK0emzNw9JszYX2eWecg/E+XS/vvJWVVnBkUtcptkPexG5qHWpQJS0/aCobyXNrrZ6jMyDyYsM5szSKE26PBmVUBrArDIGsCy/xjdEsmwooW1oXxc3tzD9Niw2Kf42FSDIoXdiNjKu8TgTfOai28TViRcmGdz/2dcyyLA+vEqzhbCIaap7xPYBmbFs+yUmaFABbq5VgP1lytZBXGhjWGleBv55olhpX2psXwuT+8B3L+w67qK1biKkbyPoVlmqgZWkNlWFy36TReEDp8siMEFpW+Yl30ju8cWKbRwxBnXVTdkAOrDUd7ZAzL6kM5RoNBz3/WqFD2wqlhTWCZRg+fRJtZEby+ZXWmxYQlkGsSZjHru4o13cKKC8twAJFoVqqlWXxYl07n9WB1AqVVYSDvM1iGpmWtNeyVRh8WjdcvvArzuAFXAlhmpmUNVjoEp7qweJEuNS1bhjWDZWZaoqBUG1bX2daAlfIMKF1rWXPDmsOqTUxLr7sjsyzgwDohtuGce8M6zd2PVpzNo4diHLyzYBmZlgDWpw6s02ALohTNUsA/P5cpGm6FToxVSWCZqNaJB+vE60izyZ6fociFG8vN8Z958Re3wih4Z8La3CQREm5cLsyKC6lITQ87Dd7ZsCq8vW/48YCsScAzDGsJ63conx02sGGR9+p+S00nkcph/ZoWx7BYsH4nPjDiUS6s66t/p5VjWExYK8YudlIqrA7rjhN4ZUdcdnQEsNbNfNiBEx4TDVjt1v/SXydUhHXH1a8TqsKy+zLwPpyQD6ul+6LBFtcJBbDuL9rrYfZzZLBeMzRNC74TimC9Yh+RhO53I1ivOCm3SarEDBbGr+aI/KhBCuvV+oiiqEEO67VkiwgWXgHrtWSrEgqWHBZ+oW5PLRYsOaykeZloq5AIlgKsV5EtqbgrwXoNWpJoVBlWgpN/u2clF3dFWK+w7EMj6D5rwtr92FgjbQiVYdFpzHumVSuIuzKs1kb3HG4VanalCitpdkyrSHBiFRadP5m+tl2pwzKbbbovVuqw2mPuUeXVfVAL1i49UYuVDqwd0ioUYwYDWLvzRB290oZFaO0oltdlpQmL9DZ30k9MFZJ9K2Hthlba9gebxDEs0qsu9sHqmDiHRTI2m6eV5t/aPmgGawe50zxRyl/ZgNXS2nbA1YaiVeILFg0htitXhYFcrYBFGpLbVllVpqxMYXWNYrpNuaoTz7A64dqiCyZV4h8WeUAbE640b1SGB13AIo9oS66Ywi0xlqvVsOgyw/l2WNVrXHA9LOKKWzGuvFpnVuthkVaxyTei7HUSGBZVgfiNqzUrjJPwsJIqduWyY1Z2YEVuXBTVESexwCLG1XZ/0ihRtbGVFbOyBoteTiv0EeIqktWNoHVYyb29pDqPzazaMBRXSXSwOl8s4vLAypoH2oaVJNeIcHVidbR5e3Zhdc+xiAcVTmKG1T3LAkJLPUFlUaxcwaJKnxRBW0Y3qFzA6nHVYXC15ywqN6jcwCKoWrVobiGkqiBSULm5K0ewupaReKNf/yMNjG1Z9wCrjbuIN5L8jSd3pEaFa3c35BJWK17EG78LL7xujUP/8wGLeCMxr8opr7R3P1zfHd+Ma1jkHvDAyzqw9EEqOV6d34kHWGNeVg2Mgrp5I+UL1sAraSy1j9RG86LySMojLMqr69Z2wMxdknLKi4Ye0x8pv7C6cAL3wG4dsVTLnOjW+a2zqIe17hYWiSeuj6iREMvHGASUOkx5UffBwbGuvF95AFidhdVDnF3Vxe0BjRtvttbUPOjgo2+LCgyrN7Gf0WBe1TR1XdByo4X+WdfN04Twz/Fahbvg5P/OcwWS5xkQqQAAAABJRU5ErkJggg==" alt="">
+        <strong>Vibe Fitness STM</strong>
+      </div>
+      <p style="max-width:32ch">Moda fitness feminina em Santarém, Pará.</p>
+    </div>
+    <nav class="vt-rodape-links" aria-label="Rodapé">
+      <a href="#" onclick="event.preventDefault(); switchTab('loja')">Catálogo</a>
+      <a href="#vt-colecao">Coleção</a>
+      <a href="#vt-grade">Tabela de tamanhos</a>
+      <a href="#vt-loja">A loja física</a>
+    </nav>
+  </div>
+  <div class="vt-env vt-creditos">
+    <span>© <span id="vt-ano"></span> Vibe Fitness STM</span>
+    <span>Santarém · Pará</span>
+  </div>
+</footer>
+
+</div>
+
+  <div id="loja" class="section">
     <div class="banner-wrap" id="banner-wrap" style="display:none">
       <div class="banner-track" id="banner-track"></div>
       <button class="banner-nav prev" onclick="bannerIr(-1)">‹</button>
@@ -1589,7 +2039,8 @@
 </div><!-- /app-shell -->
 
 <nav class="bottom-nav">
-  <button class="active" data-tab="loja" onclick="switchTab('loja')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M12 8.2a2.3 2.3 0 1 1 2.3-2.3"/><path d="M12 8.2v2.4"/><path d="M3.6 17.4 12 10.6l8.4 6.8a1 1 0 0 1-.63 1.78H4.23a1 1 0 0 1-.63-1.78Z"/></svg></span>Catálogo</button>
+  <button class="active" data-tab="inicio" onclick="switchTab('inicio')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M4.5 5.5h15l-1.2 4.2a3.2 3.2 0 0 1-3.1 2.3H8.8a3.2 3.2 0 0 1-3.1-2.3Z"/><path d="M9 12v6.5M15 12v6.5M7 18.5h10"/></svg></span>Início</button>
+  <button data-tab="loja" onclick="switchTab('loja')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M12 8.2a2.3 2.3 0 1 1 2.3-2.3"/><path d="M12 8.2v2.4"/><path d="M3.6 17.4 12 10.6l8.4 6.8a1 1 0 0 1-.63 1.78H4.23a1 1 0 0 1-.63-1.78Z"/></svg></span>Catálogo</button>
   <button data-tab="carrinho" onclick="switchTab('carrinho')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M5.2 7.2h13.6l1.1 12a1.2 1.2 0 0 1-1.2 1.3H5.3a1.2 1.2 0 0 1-1.2-1.3l1.1-12Z"/><path d="M8.7 10.2V6.6a3.3 3.3 0 0 1 6.6 0v3.6"/></svg></span>Carrinho<span class="side-badge" id="bn-cart-badge" style="display:none">0</span></button>
   <button data-tab="meuspedidos" onclick="switchTab('meuspedidos')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M9.2 3.8h5.6a1 1 0 0 1 1 1v1.1H8.2V4.8a1 1 0 0 1 1-1Z"/><path d="M8.2 5.9H6.6a1.6 1.6 0 0 0-1.6 1.6v11.9a1.6 1.6 0 0 0 1.6 1.6h10.8a1.6 1.6 0 0 0 1.6-1.6V7.5a1.6 1.6 0 0 0-1.6-1.6h-1.6"/><path d="M8.6 11h6.8M8.6 14.4h6.8M8.6 17.8h4"/></svg></span>Pedidos</button>
   <button data-tab="favoritos" onclick="switchTab('favoritos')"><span class="bn-ico"><svg viewBox="0 0 24 24"><path d="M12 20.1s-7.6-4.7-7.6-9.8a4.5 4.5 0 0 1 7.6-2.9 4.5 4.5 0 0 1 7.6 2.9c0 5.1-7.6 9.8-7.6 9.8Z"/></svg></span>Favoritos</button>
@@ -1741,6 +2192,9 @@ function switchTab(tab) {
   // O PDV é tela de operação: esconde a barra de categorias e a busca da loja,
   // que só servem para quem está comprando pelo site.
   document.body.classList.toggle('modo-pdv', tab === 'pdv');
+  // A vitrine tem visual próprio e também dispensa filtros e busca do catálogo.
+  document.body.classList.toggle('modo-vitrine', tab === 'inicio');
+  if (tab === 'inicio') renderVitrine();
   if (tab === 'carrinho') renderCarrinho();
   if (tab === 'meuspedidos') renderMeusPedidos();
   if (tab === 'favoritos') renderFavoritos();
@@ -1811,6 +2265,7 @@ function carregarProdutos() {
     montarCategorias();
     renderCatalog();
     renderAdminTable();
+    renderVitrine();
   }, err => {
     document.getElementById('catalog-loader').innerHTML = '⚠️ Erro ao carregar produtos. Verifique a configuração do Firebase.';
     console.error(err);
@@ -3850,6 +4305,130 @@ function produtoView(v) {
   });
   document.querySelectorAll('.prod-sub-btn[data-pview]').forEach(b => b.classList.toggle('active', b.dataset.pview === v));
   if (v === 'estoque') renderAdminTable();
+}
+
+
+/* ==================== VITRINE (seção de apresentação) ==================== */
+/*
+ * Usa os mesmos produtos já carregados pelo catálogo — nada de buscar de novo.
+ * As regras de estoque (inclusive conjunto) vêm de estoqueCombo().
+ */
+let vitrineDesenhada = false;
+
+// Tamanhos e numerações que ainda têm peça — a vitrine só mostra o que dá para comprar
+function vtMedidas(p) {
+  const temGrade = Array.isArray(p.variacoes) && p.variacoes.length;
+  const vivo = (campo, valor) => !temGrade ||
+    p.variacoes.some(v => (v[campo] || '') === valor && (Number(v.estoque) || 0) > 0);
+  return [...(p.tamanhos || []).filter(t => vivo('tamanho', t)),
+          ...(p.numeracoes || []).filter(n => vivo('numeracao', n))];
+}
+
+function vtCartao(p) {
+  const capa = getCapa(p);
+  const medidas = vtMedidas(p).slice(0, 8);
+  const cores = (p.cores || []).slice(0, 6);
+  const atacado = temAtacado(p);
+  return `
+    <article class="vt-peca vt-rev">
+      <div class="vt-peca-foto">
+        ${capa ? `<img src="${capa}" alt="${p.nome}" loading="lazy">`
+               : `<span class="vt-peca-vazia">sem foto</span>`}
+        ${p.categoria ? `<span class="vt-peca-cat">${p.categoria}</span>` : ''}
+      </div>
+      <div class="vt-peca-corpo">
+        <h3 class="vt-peca-nome">${p.nome}</h3>
+        <p class="vt-peca-preco">${atacado ? fmt(p.precoAtacado) + `<s>${fmt(p.preco)}</s>` : fmt(p.preco)}</p>
+        ${medidas.length ? `<div class="vt-peca-tam">${medidas.map(m => `<b>${m}</b>`).join('')}</div>` : ''}
+        ${cores.length ? `<div class="vt-peca-cores">${cores.map(cr =>
+            `<i style="background:${cr.hex || '#888'}" title="${cr.nome}"></i>`).join('')}</div>` : ''}
+      </div>
+      <a href="javascript:void(0)" onclick="abrirProduto('${p.id}')"
+         aria-label="Ver ${p.nome}" style="position:absolute;inset:0"></a>
+    </article>`;
+}
+
+let vtRelogioFoto = null;
+function vtChevron(fotos) {
+  const alvo = document.getElementById('vt-chevron-fotos');
+  if (!alvo) return;
+  if (vtRelogioFoto) { clearInterval(vtRelogioFoto); vtRelogioFoto = null; }
+  if (!fotos.length) return;
+  alvo.innerHTML = fotos.map(src => `<img src="${src}" alt="">`).join('');
+  const imgs = [...alvo.querySelectorAll('img')];
+  imgs[0].classList.add('on');
+  if (imgs.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let i = 0;
+    vtRelogioFoto = setInterval(() => {
+      imgs[i].classList.remove('on');
+      i = (i + 1) % imgs.length;
+      imgs[i].classList.add('on');
+    }, 3600);
+  }
+}
+
+function renderVitrine() {
+  const grade = document.getElementById('vt-vitrine');
+  if (!grade) return;
+
+  // letreiro (uma vez só)
+  const letr = document.getElementById('vt-letreiro');
+  if (letr && !letr.innerHTML) {
+    const frases = ['Suplex trama dupla', 'Pronta entrega', 'Cintura alta', 'Zero transparência',
+                    'Prova na loja', 'Santarém · Pará', 'Atacado a partir de 3'];
+    const bloco = frases.map(f => `<span>${f}</span>`).join('');
+    letr.innerHTML = bloco + bloco; // duplicado para o laço não ter emenda
+  }
+
+  const ano = document.getElementById('vt-ano');
+  if (ano) ano.textContent = new Date().getFullYear();
+
+  // WhatsApp da loja, o mesmo das Configurações
+  const wa = document.getElementById('vt-f-whats');
+  if (wa && config && config.whats) {
+    const num = String(config.whats).replace(/\D/g, '');
+    if (num) {
+      wa.href = 'https://wa.me/55' + num + '?text=' +
+        encodeURIComponent('Oi! Vim pelo site da Vibe Fitness STM e queria saber mais sobre as peças.');
+      wa.target = '_blank'; wa.rel = 'noopener'; wa.dataset.wa = '1';
+    }
+  }
+
+  const carregando = document.getElementById('vt-carregando');
+  if (!produtos.length) { if (carregando) carregando.style.display = ''; return; }
+  if (carregando) carregando.style.display = 'none';
+
+  const ativos = produtos.filter(p => p.ativo !== false);
+  const lista = ativos.filter(p => estoqueCombo(p, {}) > 0);
+  const mostrar = (lista.length ? lista : ativos)
+    .slice()
+    .sort((a, b) => (getCapa(b) ? 1 : 0) - (getCapa(a) ? 1 : 0) || a.nome.localeCompare(b.nome, 'pt-BR'));
+
+  grade.innerHTML = mostrar.length
+    ? mostrar.slice(0, 8).map(vtCartao).join('')
+    : `<p style="color:var(--lilas);grid-column:1/-1">A coleção está sendo reposta.</p>`;
+
+  const comFoto = mostrar.filter(getCapa);
+  vtChevron(comFoto.slice(0, 5).map(getCapa));
+  const fotoLoja = document.getElementById('vt-foto-loja');
+  if (fotoLoja && comFoto.length) {
+    fotoLoja.src = getCapa(comFoto[comFoto.length - 1]);
+    fotoLoja.onload = () => fotoLoja.classList.add('on');
+  }
+
+  vtObservar();
+  vitrineDesenhada = true;
+}
+
+/* revelação no rolar */
+let vtObservador;
+function vtObservar() {
+  if (!vtObservador) {
+    vtObservador = new IntersectionObserver(es => {
+      es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); vtObservador.unobserve(e.target); } });
+    }, { threshold: .12, rootMargin: '0px 0px -8%' });
+  }
+  document.querySelectorAll('#inicio .vt-rev:not(.vis)').forEach(el => vtObservador.observe(el));
 }
 
 /* ==================== PDV — VENDA PRESENCIAL ==================== */
@@ -6120,6 +6699,7 @@ document.getElementById('logo-login').src = LOGO_B64;
 document.getElementById('favicon').href = LOGO_B64;
 
 /* ==================== INIT ==================== */
+document.body.classList.add('modo-vitrine');   // a vitrine é a primeira tela
 iniciarNoite();
 document.getElementById('import-colunas-txt').innerHTML = COLUNAS_TXT[importModo];
 renderTamanhosAdmin();
