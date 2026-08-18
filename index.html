@@ -834,17 +834,30 @@
   /* Na vitrine o catálogo some: sem pílulas de categoria, sem busca, sem filtros */
   body.modo-vitrine .cat-nav,
   body.modo-vitrine .topbar-search,
-  body.modo-vitrine .side-filtros,
-  body.modo-vitrine .side-title.filtros-titulo { display:none !important; }
+  body.modo-vitrine .sidebar { display:none !important; }
+  /* sem a lateral, a vitrine ocupa a tela inteira */
+  body.modo-vitrine .main-area { margin-left:0 !important; }
   /* a vitrine ocupa a largura toda: o respiro é dela, não do contêiner do site */
   body.modo-vitrine .container { max-width:none; padding:0; }
   /* enquanto a vitrine está aberta, a navegação acompanha o tom escuro dela */
-  body.modo-vitrine .sidebar { background:#1B1224; border-right-color:#3D2152; }
-  body.modo-vitrine .side-title { color:#8E7CA3; }
-  body.modo-vitrine .side-btn { color:#C0A8D6; }
-  body.modo-vitrine .side-btn:hover { background:#2A1838; color:#F7F2FA; }
-  body.modo-vitrine .side-btn.active { background:#3D2152; color:#F7F2FA; }
-  body.modo-vitrine .side-btn .s-ico { color:#E9B44C; }
+  /* Na vitrine o topo vira nav de landing: transparente sobre o hero e
+     escurecendo ao rolar. A faixa listrada do catálogo sai de cena. */
+  body.modo-vitrine .topbar{
+    background:transparent;box-shadow:none;
+    transition:background .35s ease,box-shadow .35s ease,backdrop-filter .35s ease;
+  }
+  body.modo-vitrine .topbar::after{opacity:0;transition:opacity .35s ease}
+  body.modo-vitrine.vt-rolou .topbar{
+    background:rgba(21,12,28,.82);backdrop-filter:blur(16px);
+    box-shadow:0 1px 0 rgba(233,180,76,.22);
+  }
+  body.modo-vitrine .tb-btn{
+    background:rgba(255,255,255,.07);border:1px solid rgba(233,180,76,.28);
+    transition:background .25s,border-color .25s;
+  }
+  body.modo-vitrine .tb-btn:hover{background:rgba(233,180,76,.16);border-color:var(--ouro)}
+  body.modo-vitrine .btn-noite{border-color:rgba(233,180,76,.35)}
+
   body.modo-vitrine .bottom-nav { background:#1B1224; border-top-color:#3D2152; }
   body.modo-vitrine .bottom-nav button { color:#C0A8D6; }
   body.modo-vitrine .bottom-nav button.active { color:#E9B44C; }
@@ -1077,6 +1090,128 @@
 #inicio .vt-rev{opacity:1;transform:none}
 #inicio .vt-surge{opacity:1;transform:none}
 #inicio .vt-chevron-traco path{stroke-dashoffset:0}}
+
+  /* ===== VITRINE: navegação própria (a lateral some aqui) ===== */
+  .vt-nav{
+    position:sticky;top:var(--topbar-h);z-index:40;display:flex;align-items:center;gap:1.8rem;
+    padding:.75rem clamp(1.25rem,5vw,5.5rem);
+    background:rgba(21,12,28,.72);backdrop-filter:blur(16px) saturate(1.2);
+    border-bottom:1px solid rgba(61,33,82,.9);
+  }
+  .vt-nav a{font-family:var(--dado);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+            color:#C0A8D6;transition:color .2s;position:relative;padding-block:.2rem}
+  .vt-nav a::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:1px;
+                   background:var(--ouro);transition:width .3s cubic-bezier(.2,.7,.3,1)}
+  .vt-nav a:hover{color:#F7F2FA}
+  .vt-nav a:hover::after{width:100%}
+  .vt-nav .vt-nav-fim{margin-left:auto;display:flex;gap:.6rem;align-items:center}
+  @media(max-width:700px){
+    .vt-nav{gap:1.1rem;overflow-x:auto;scrollbar-width:none}
+    .vt-nav::-webkit-scrollbar{display:none}
+    .vt-nav a{white-space:nowrap}
+  }
+
+  /* barra de progresso do rolar, em ouro */
+  .vt-progresso{position:fixed;top:0;left:0;height:2px;z-index:70;width:0;
+                background:linear-gradient(90deg,#B8801F,#FBEBB8,#E9B44C);
+                box-shadow:0 0 12px rgba(233,180,76,.6);transition:width .1s linear}
+  body:not(.modo-vitrine) .vt-progresso{opacity:0}
+
+  /* Lustro que atravessa o botão ao passar o mouse */
+  .vt-btn{position:relative;overflow:hidden;isolation:isolate}
+  .vt-btn::after{
+    content:'';position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.42) 50%,transparent 65%);
+    transform:translateX(-130%);transition:transform .75s cubic-bezier(.2,.7,.3,1);
+  }
+  .vt-btn:hover::after{transform:translateX(130%)}
+
+  /* Cantoneiras douradas que se fecham sobre a peça */
+  .vt-peca{position:relative}
+  .vt-peca::before,.vt-peca::after{
+    content:'';position:absolute;width:26px;height:26px;pointer-events:none;z-index:3;
+    border:2px solid var(--ouro);opacity:0;transition:opacity .35s ease,inset .45s cubic-bezier(.2,.7,.3,1);
+  }
+  .vt-peca::before{top:14px;left:14px;border-right:0;border-bottom:0}
+  .vt-peca::after{bottom:14px;right:14px;border-left:0;border-top:0}
+  .vt-peca:hover::before{opacity:1;top:9px;left:9px}
+  .vt-peca:hover::after{opacity:1;bottom:9px;right:9px}
+  /* clarão diagonal na foto */
+  .vt-peca-foto::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(115deg,transparent 40%,rgba(233,180,76,.22) 50%,transparent 60%);
+    transform:translateX(-120%);transition:transform .85s cubic-bezier(.2,.7,.3,1);
+  }
+  .vt-peca:hover .vt-peca-foto::after{transform:translateX(120%)}
+
+  /* Foco de luz que segue o mouse no hero (só em telas com ponteiro) */
+  .vt-luz{
+    position:absolute;inset:0;pointer-events:none;z-index:1;opacity:0;
+    transition:opacity .5s ease;
+    background:radial-gradient(340px circle at var(--mx,50%) var(--my,40%),
+               rgba(233,180,76,.16),transparent 70%);
+  }
+  @media (hover:hover) and (pointer:fine){ .vt-hero:hover .vt-luz{opacity:1} }
+
+  /* ===== fundo vivo do hero: aurora + grão ===== */
+  .vt-aurora{position:absolute;inset:-20% -10%;pointer-events:none;overflow:hidden;z-index:0}
+  .vt-aurora i{position:absolute;display:block;border-radius:50%;filter:blur(70px);opacity:.5;
+               mix-blend-mode:screen;will-change:transform}
+  .vt-aurora i:nth-child(1){width:44vw;height:44vw;left:6%;top:8%;
+    background:radial-gradient(circle,rgba(233,180,76,.55),transparent 68%);animation:vtOrb1 22s ease-in-out infinite}
+  .vt-aurora i:nth-child(2){width:38vw;height:38vw;right:4%;top:24%;
+    background:radial-gradient(circle,rgba(122,84,158,.6),transparent 68%);animation:vtOrb2 27s ease-in-out infinite}
+  .vt-aurora i:nth-child(3){width:32vw;height:32vw;left:34%;bottom:2%;
+    background:radial-gradient(circle,rgba(209,134,31,.42),transparent 70%);animation:vtOrb3 19s ease-in-out infinite}
+  @keyframes vtOrb1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(6vw,4vh,0) scale(1.14)}}
+  @keyframes vtOrb2{0%,100%{transform:translate3d(0,0,0) scale(1.08)}50%{transform:translate3d(-5vw,6vh,0) scale(.92)}}
+  @keyframes vtOrb3{0%,100%{transform:translate3d(0,0,0) scale(.95)}50%{transform:translate3d(4vw,-5vh,0) scale(1.16)}}
+
+  /* textura de grão: tira o aspecto de degradê plástico */
+  .vt-grao{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.16;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='r'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23r)' opacity='.55'/></svg>")}
+
+  /* ===== título com revelação palavra a palavra ===== */
+  .vt-palavra{display:inline-block;overflow:hidden;vertical-align:top}
+  .vt-palavra > span{display:inline-block;transform:translateY(105%);
+                     animation:vtSobe .9s cubic-bezier(.16,.84,.28,1) forwards}
+  @keyframes vtSobe{to{transform:translateY(0)}}
+
+  /* brilho que atravessa o letreiro dourado do título */
+  .vt-foil-vivo{background:linear-gradient(100deg,#B8801F 0%,#E9B44C 18%,#FBEBB8 32%,#E9B44C 46%,#C08D28 62%,#E9B44C 80%,#FBEBB8 100%);
+    background-size:280% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:vtBrilho 7s linear infinite}
+  @keyframes vtBrilho{to{background-position:280% 0}}
+
+  /* ===== cartão de produto: holofote que segue o cursor + inclinação ===== */
+  .vt-peca{transform-style:preserve-3d;will-change:transform}
+  .vt-peca::before{
+    content:'';position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .35s;
+    background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),rgba(233,180,76,.16),transparent 62%);
+  }
+  .vt-peca:hover::before{opacity:1}
+  /* fio dourado que corre na borda de cima ao passar o mouse */
+  .vt-peca::after{content:'';position:absolute;left:0;top:0;height:2px;width:0;z-index:4;
+                  background:linear-gradient(90deg,transparent,#FBEBB8,#E9B44C,transparent);
+                  transition:width .5s cubic-bezier(.2,.7,.3,1)}
+  .vt-peca:hover::after{width:100%}
+
+  /* ===== números da loja ===== */
+  .vt-numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+              gap:1px;background:#3D2152;border:1px solid #3D2152}
+  .vt-numeros div{background:#150C1C;padding:1.8rem 1.4rem;text-align:center;transition:background .3s}
+  .vt-numeros div:hover{background:#241333}
+  .vt-numeros b{display:block;font-family:var(--display);font-weight:900;font-size:clamp(2.6rem,6vw,4rem);
+                line-height:1;background:var(--foil);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .vt-numeros span{font-family:var(--dado);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;
+                   color:#8E7CA3;display:block;margin-top:.5rem}
+
+  @media (prefers-reduced-motion:reduce){
+    .vt-aurora i{animation:none}
+    .vt-foil-vivo{animation:none}
+    .vt-palavra > span{transform:none;animation:none}
+    .vt-peca{transform:none!important}
+  }
 </style>
 </head>
 <body>
@@ -1202,8 +1337,13 @@
   </defs>
 </svg>
 
+<div class="vt-progresso" id="vt-progresso" aria-hidden="true"></div>
+
 <!-- ============ HERO ============ -->
 <header class="vt-hero" id="vt-topo">
+  <div class="vt-luz" aria-hidden="true"></div>
+    <div class="vt-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="vt-grao" aria-hidden="true"></div>
   <div class="vt-hero-env">
 
     <div class="vt-chevron vt-surge">
@@ -1213,9 +1353,11 @@
       </svg>
     </div>
 
-    <h1 class="vt-display vt-surge vt-d1">
-      Vista sua vibe
-      <span class="l2 vt-foil">Santarém · Pará</span>
+    <h1 class="vt-display vt-d1" id="vt-titulo">
+      <span class="vt-palavra"><span style="animation-delay:.95s">Vista</span></span>
+      <span class="vt-palavra"><span style="animation-delay:1.05s">sua</span></span>
+      <span class="vt-palavra"><span style="animation-delay:1.15s">vibe</span></span>
+      <span class="l2 vt-foil-vivo vt-surge vt-d2">Santarém · Pará</span>
     </h1>
 
     <p class="vt-hero-lead vt-surge vt-d2">
@@ -1238,6 +1380,12 @@
 </div>
 
 <!-- ============ COLEÇÃO ============ -->
+<section class="vt-secao" style="padding-bottom:0">
+  <div class="vt-env">
+    <div class="vt-numeros vt-rev" id="vt-numeros"></div>
+  </div>
+</section>
+
 <section class="vt-secao" id="vt-colecao">
   <div class="vt-env">
     <div class="vt-secao-cab vt-rev">
@@ -4416,8 +4564,128 @@ function renderVitrine() {
     fotoLoja.onload = () => fotoLoja.classList.add('on');
   }
 
+  vtNumeros(ativos);
   vtObservar();
+  vtEfeitos();
   vitrineDesenhada = true;
+}
+
+/* ---------- números reais da loja ---------- */
+function vtNumeros(ativos) {
+  const alvo = document.getElementById('vt-numeros');
+  if (!alvo) return;
+
+  const pecas = ativos.reduce((s, p) => s + estoqueCombo(p, {}), 0);
+  const categorias = new Set(ativos.map(p => p.categoria).filter(Boolean)).size;
+  const cores = new Set();
+  const medidas = new Set();
+  ativos.forEach(p => {
+    (p.cores || []).forEach(x => x && x.nome && cores.add(x.nome.toLowerCase()));
+    (p.tamanhos || []).forEach(t => medidas.add('t' + t));
+    (p.numeracoes || []).forEach(x => medidas.add('n' + x));
+  });
+
+  const dados = [
+    [pecas, 'peças em estoque'],
+    [ativos.length, 'modelos'],
+    [cores.size, 'cores'],
+    [medidas.size || categorias, medidas.size ? 'tamanhos' : 'categorias'],
+  ].filter(d => d[0] > 0);
+
+  alvo.innerHTML = dados.map(([v, r]) =>
+    `<div><b data-ate="${v}">0</b><span>${r}</span></div>`).join('');
+}
+
+// Conta de 0 até o número quando a faixa entra na tela
+function vtContar(el) {
+  const ate = Number(el.dataset.ate) || 0;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = ate; return; }
+  const dur = 1100, ini = performance.now();
+  const passo = agora => {
+    const t = Math.min((agora - ini) / dur, 1);
+    el.textContent = Math.round(ate * (1 - Math.pow(1 - t, 3))); // desacelera no fim
+    if (t < 1) requestAnimationFrame(passo);
+  };
+  requestAnimationFrame(passo);
+}
+
+/* ---------- efeitos: holofote, inclinação, paralaxe e progresso ---------- */
+let vtEfeitosProntos = false;
+function vtEfeitos() {
+  const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // holofote + leve inclinação 3D nos cartões (só onde há mouse de verdade)
+  if (suave && window.matchMedia('(hover: hover)').matches) {
+    document.querySelectorAll('#vt-vitrine .vt-peca').forEach(card => {
+      if (card.dataset.efeito) return;
+      card.dataset.efeito = '1';
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect();
+        const x = e.clientX - r.left, y = e.clientY - r.top;
+        card.style.setProperty('--mx', x + 'px');
+        card.style.setProperty('--my', y + 'px');
+        const rx = ((y / r.height) - .5) * -5, ry = ((x / r.width) - .5) * 5;
+        card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-5px)`;
+      });
+      card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+    });
+  }
+
+  if (vtEfeitosProntos) return;
+  vtEfeitosProntos = true;
+
+  // conta os números quando aparecem
+  const obsNum = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { vtContar(e.target); obsNum.unobserve(e.target); }
+  }), { threshold: .6 });
+  const ligarNumeros = () =>
+    document.querySelectorAll('#vt-numeros b[data-ate]').forEach(b => obsNum.observe(b));
+  ligarNumeros();
+  new MutationObserver(ligarNumeros).observe(document.getElementById('vt-numeros') || document.body,
+    { childList: true });
+
+  // barra de progresso + paralaxe do chevron
+  const barra = document.getElementById('vt-progresso');
+  const chevron = document.querySelector('.vt-chevron');
+  let tickando = false;
+  const aoRolar = () => {
+    if (tickando) return;
+    tickando = true;
+    requestAnimationFrame(() => {
+      const alt = document.documentElement.scrollHeight - innerHeight;
+      if (barra) barra.style.width = (alt > 0 ? (scrollY / alt) * 100 : 0) + '%';
+      document.body.classList.toggle('vt-rolou', scrollY > 30);
+      if (chevron && suave && scrollY < innerHeight) {
+        chevron.style.transform = `translateY(${scrollY * .18}px) scale(${1 - scrollY / 4200})`;
+        chevron.style.opacity = Math.max(0, 1 - scrollY / (innerHeight * .8));
+      }
+      tickando = false;
+    });
+  };
+  addEventListener('scroll', aoRolar, { passive: true });
+
+  // foco de luz seguindo o mouse dentro do hero
+  const heroEl = document.querySelector('.vt-hero');
+  if (heroEl && matchMedia('(hover:hover) and (pointer:fine)').matches) {
+    heroEl.addEventListener('pointermove', ev => {
+      const r = heroEl.getBoundingClientRect();
+      heroEl.style.setProperty('--mx', ((ev.clientX - r.left) / r.width * 100) + '%');
+      heroEl.style.setProperty('--my', ((ev.clientY - r.top) / r.height * 100) + '%');
+    }, { passive: true });
+  }
+  aoRolar();
+
+  // o chevron acompanha de leve o movimento do mouse
+  if (suave && window.matchMedia('(hover: hover)').matches) {
+    const hero = document.getElementById('vt-topo');
+    const fotos = document.getElementById('vt-chevron-fotos');
+    if (hero && fotos) hero.addEventListener('pointermove', e => {
+      const r = hero.getBoundingClientRect();
+      const dx = ((e.clientX - r.left) / r.width - .5) * 14;
+      const dy = ((e.clientY - r.top) / r.height - .5) * 10;
+      fotos.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(1.06)`;
+    });
+  }
 }
 
 /* revelação no rolar */
